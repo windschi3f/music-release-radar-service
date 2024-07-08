@@ -14,4 +14,8 @@ public interface SpotifyApi {
     @GET
     @Path("/me")
     SpotifyUser getCurrentUser(@HeaderParam("Authorization") String authHeader);
+
+    @GET
+    @Path("/me/following")
+    SpotifyUser getFollowing(@HeaderParam("Authorization") String authHeader);
 }
