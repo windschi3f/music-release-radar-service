@@ -1,6 +1,6 @@
 package com.windschief.task.dto;
 
-import com.windschief.task.model.TaskItemType;
+import com.windschief.task.domain.TaskItemType;
 
 public record TaskItemResponseDto(
         Long id,

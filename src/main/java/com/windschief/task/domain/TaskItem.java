@@ -1,4 +1,4 @@
-package com.windschief.task.model;
+package com.windschief.task.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

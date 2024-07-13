@@ -1,4 +1,4 @@
-package com.windschief.task.model;
+package com.windschief.task.domain;
 
 import java.time.Instant;
 import java.util.ArrayList;

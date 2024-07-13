@@ -2,7 +2,7 @@ package com.windschief.task.dto;
 
 import java.time.Instant;
 
-import com.windschief.task.model.Platform;
+import com.windschief.task.domain.Platform;
 
 public record TaskResponseDto(
         Long id,

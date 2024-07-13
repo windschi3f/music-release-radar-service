@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
-
-import com.windschief.task.model.Platform;
-import com.windschief.task.model.Task;
-import com.windschief.task.model.TaskItem;
-import com.windschief.task.model.TaskItemType;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.windschief.task.domain.Platform;
+import com.windschief.task.domain.Task;
+import com.windschief.task.domain.TaskItem;
+import com.windschief.task.domain.TaskItemType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

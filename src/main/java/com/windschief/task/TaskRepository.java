@@ -2,9 +2,9 @@ package com.windschief.task;
 
 import java.util.List;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import com.windschief.task.domain.Task;
 
-import com.windschief.task.model.Task;
+import jakarta.enterprise.context.ApplicationScoped;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 
 @ApplicationScoped

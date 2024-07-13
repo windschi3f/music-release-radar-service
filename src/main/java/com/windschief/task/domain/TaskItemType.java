@@ -1,4 +1,4 @@
-package com.windschief.task.model;
+package com.windschief.task.domain;
 
 public enum TaskItemType {
     ARTIST,
