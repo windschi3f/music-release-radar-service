@@ -22,14 +22,14 @@ public class TaskItem {
     @Enumerated(EnumType.STRING)
     private TaskItemType itemType;
 
-    private String itemId;
+    private String externalReferenceId;
 
     public TaskItemType getItemType() {
         return itemType;
     }
 
-    public String getItemId() {
-        return itemId;
+    public String getExternalReferenceId() {
+        return externalReferenceId;
     }
 
     public void setTask(Task task) {
@@ -40,7 +40,7 @@ public class TaskItem {
         this.itemType = itemType;
     }
 
-    public void setItemId(String itemId) {
-        this.itemId = itemId;
+    public void setExternalReferenceId(String externalReferenceId) {
+        this.externalReferenceId = externalReferenceId;
     }
 }

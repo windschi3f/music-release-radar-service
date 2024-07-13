@@ -64,7 +64,7 @@ class TaskRepositoryTest {
 
         TaskItem item = new TaskItem();
         item.setItemType(TaskItemType.ARTIST);
-        item.setItemId("1");
+        item.setExternalReferenceId("1");
         task.addTaskItem(item);
 
         taskRepository.persist(task);
@@ -75,7 +75,7 @@ class TaskRepositoryTest {
         // THEN
         assertEquals(1, tasks.size());
         assertEquals(1, tasks.get(0).getTaskItems().size());
-        assertEquals("1", tasks.get(0).getTaskItems().get(0).getItemId());
+        assertEquals("1", tasks.get(0).getTaskItems().get(0).getExternalReferenceId());
     }
 
     @Test
