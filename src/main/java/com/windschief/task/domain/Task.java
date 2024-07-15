@@ -13,10 +13,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-
 @Entity
-public class Task extends PanacheEntityBase {
+public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
