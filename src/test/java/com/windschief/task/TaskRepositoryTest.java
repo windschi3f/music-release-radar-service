@@ -4,15 +4,16 @@ import java.util.List;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
-import io.quarkus.test.TestTransaction;
-import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import com.windschief.task.domain.Platform;
 import com.windschief.task.domain.Task;
 import com.windschief.task.domain.TaskItem;
 import com.windschief.task.domain.TaskItemType;
+import io.quarkus.test.TestTransaction;
+import io.quarkus.test.junit.QuarkusTest;
+import org.hibernate.Hibernate;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -76,6 +77,33 @@ class TaskRepositoryTest {
         assertEquals(1, tasks.size());
         assertEquals(1, tasks.get(0).getTaskItems().size());
         assertEquals("1", tasks.get(0).getTaskItems().get(0).getExternalReferenceId());
+    }
+
+    @Test
+    @TestTransaction
+    void givenPersistedTaskWithItems_whenRetrievedWithinSameTransaction_thenTaskItemsAreLazilyLoadedWithAdditionalQuery() {
+        // GIVEN
+        Task task = new Task();
+        task.setUserId("user");
+        task.setPlatform(Platform.YOUTUBE);
+
+        TaskItem item = new TaskItem();
+        item.setItemType(TaskItemType.ARTIST);
+        item.setExternalReferenceId("1");
+        task.addTaskItem(item);
+
+        taskRepository.persist(task);
+
+        // Simulate detaching entities
+        taskRepository.getEntityManager().flush();
+        taskRepository.getEntityManager().clear();
+
+        // WHEN
+        Task taskRetrieved = taskRepository.findById(task.getId());
+
+        // THEN
+        assertFalse(Hibernate.isInitialized(taskRetrieved.getTaskItems()), "TaskItems should not be initialized upon Task retrieval");
+        assertEquals(1, taskRetrieved.getTaskItems().size(), "TaskItems should be accessible within the same transaction");
     }
 
     @Test
