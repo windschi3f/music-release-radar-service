@@ -24,6 +24,14 @@ public class TaskItem {
 
     private String externalReferenceId;
 
+    public Long getId() {
+        return id;
+    }
+
+    public Task getTask() {
+        return task;
+    }
+
     public TaskItemType getItemType() {
         return itemType;
     }
