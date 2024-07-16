@@ -7,7 +7,7 @@ import com.windschief.task.domain.Task;
 
 public record TaskRequestDto(
                 Platform platform,
-                String executionInterval,
+                int executionIntervalDays,
                 Instant checkFrom,
                 boolean active) {
     public static Task toTask(TaskRequestDto taskRequestDto) {
@@ -16,7 +16,7 @@ public record TaskRequestDto(
         }
         Task task = new Task();
         task.setPlatform(taskRequestDto.platform());
-        task.setExecutionInterval(taskRequestDto.executionInterval());
+        task.setExecutionIntervalDays(taskRequestDto.executionIntervalDays());
         task.setCheckFrom(taskRequestDto.checkFrom());
         task.setActive(taskRequestDto.active());
         return task;

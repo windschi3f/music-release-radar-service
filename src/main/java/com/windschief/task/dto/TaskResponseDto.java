@@ -8,7 +8,7 @@ import com.windschief.task.domain.Task;
 public record TaskResponseDto(
         Long id,
         Platform platform,
-        String executionInterval,
+        int executionIntervalDays,
         Instant lastTimeExecuted,
         Instant checkFrom,
         boolean active) {
@@ -19,7 +19,7 @@ public record TaskResponseDto(
         return new TaskResponseDto(
                 task.getId(),
                 task.getPlatform(),
-                task.getExecutionInterval(),
+                task.getExecutionIntervalDays(),
                 task.getLastTimeExecuted(),
                 task.getCheckFrom(),
                 task.isActive()

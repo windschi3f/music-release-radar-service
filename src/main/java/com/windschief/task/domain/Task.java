@@ -25,7 +25,7 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private Platform platform;
 
-    private String executionInterval;
+    private int executionIntervalDays = 7;
     private Instant lastTimeExecuted;
     private Instant checkFrom;
     private boolean active;
@@ -61,12 +61,12 @@ public class Task {
         this.platform = platform;
     }
 
-    public String getExecutionInterval() {
-        return executionInterval;
+    public int getExecutionIntervalDays() {
+        return executionIntervalDays;
     }
 
-    public void setExecutionInterval(String executionInterval) {
-        this.executionInterval = executionInterval;
+    public void setExecutionIntervalDays(int executionIntervalDays) {
+        this.executionIntervalDays = executionIntervalDays;
     }
 
     public Instant getLastTimeExecuted() {
