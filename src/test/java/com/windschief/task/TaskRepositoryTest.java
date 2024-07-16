@@ -57,7 +57,7 @@ class TaskRepositoryTest {
 
     @Test
     @TestTransaction
-    void givenPersistedTaskWithItems_whenFindByUserIdWithItems_thenTaskIsFound() {
+    void givenPersistedTaskWithItems_whenFindByUserId_thenTaskIsFound() {
         // GIVEN
         Task task = new Task();
         task.setUserId("user");
@@ -71,7 +71,7 @@ class TaskRepositoryTest {
         taskRepository.persist(task);
 
         // WHEN
-        List<Task> tasks = taskRepository.findByUserIdWithItems("user");
+        List<Task> tasks = taskRepository.findByUserId("user");
 
         // THEN
         assertEquals(1, tasks.size());
@@ -142,5 +142,23 @@ class TaskRepositoryTest {
 
         // THEN
         assertEquals(2, count);
+    }
+
+    @Test
+    @TestTransaction
+    void givenPersistedTask_whenDeleteByTaskIdAndUserId_thenTaskIsDeleted() {
+        // GIVEN
+        Task task = new Task();
+        task.setUserId("user");
+        task.setPlatform(Platform.YOUTUBE);
+
+        taskRepository.persist(task);
+
+        // WHEN
+        long deletedCount = taskRepository.deleteByTaskIdAndUserId(task.getId(), task.getUserId());
+
+        // THEN
+        assertEquals(1, deletedCount);
+        assertEquals(0, taskRepository.findByUserId("user").size());
     }
 }
