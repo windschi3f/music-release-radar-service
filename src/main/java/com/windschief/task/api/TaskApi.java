@@ -44,19 +44,17 @@ public interface TaskApi {
         @Operation(summary = "Get a task by ID")
         @APIResponses(value = {
                         @APIResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskResponseDto.class))),
+                        @APIResponse(responseCode = "401", description = "Unauthorized"),
                         @APIResponse(responseCode = "404", description = "Task not found")
         })
         @Authenticated
-        TaskResponseDto getTask(@Parameter(description = "ID of the task", required = true) @PathParam("id") Long id);
+        Response getTask(@Parameter(description = "ID of the task", required = true) @PathParam("id") Long id);
 
         @POST
         @Operation(summary = "Create a new task")
-        @APIResponses(value = {
-                        @APIResponse(responseCode = "201", description = "Task created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskResponseDto.class))),
-                        @APIResponse(responseCode = "400", description = "Invalid input")
-        })
+        @APIResponse(responseCode = "201", description = "Task created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskResponseDto.class)))
         @Authenticated
-        Response createTask(
+        TaskResponseDto createTask(
                         @Parameter(description = "Task to be created", required = true, schema = @Schema(implementation = TaskRequestDto.class)) TaskRequestDto taskRequestDto);
 
         @PUT
@@ -64,11 +62,11 @@ public interface TaskApi {
         @Operation(summary = "Update an existing task")
         @APIResponses(value = {
                         @APIResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskResponseDto.class))),
-                        @APIResponse(responseCode = "400", description = "Invalid input"),
+                        @APIResponse(responseCode = "401", description = "Unauthorized"),
                         @APIResponse(responseCode = "404", description = "Task not found"),
         })
         @Authenticated
-        TaskResponseDto updateTask(
+        Response updateTask(
                         @Parameter(description = "ID of the task to be updated", required = true) @PathParam("id") Long id,
                         @Parameter(description = "Updated task information", required = true, schema = @Schema(implementation = TaskRequestDto.class)) TaskRequestDto taskRequestDto);
 
