@@ -2,7 +2,10 @@ package com.windschief.spotify.model;
 
 import java.util.List;
 
-public record Artist(
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record ArtistItem(
+        @JsonProperty("external_urls")
         ExternalUrls externalUrls,
         Followers followers,
         List<String> genres,

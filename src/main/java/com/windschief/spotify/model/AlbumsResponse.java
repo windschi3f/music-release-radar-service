@@ -2,11 +2,12 @@ package com.windschief.spotify.model;
 
 import java.util.List;
 
-public record Artists(
+public record AlbumsResponse(
         String href,
         int limit,
         String next,
-        Cursors cursors,
+        int offset,
+        String previous,
         int total,
-        List<Artist> items) {
-}
+        List<AlbumItem> items
+) {}
