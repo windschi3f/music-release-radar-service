@@ -3,6 +3,7 @@ package com.windschief.task.service;
 import java.util.List;
 
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 
@@ -19,6 +20,7 @@ public class TaskService implements TaskApi {
     private final SecurityIdentity securityIdentity;
     private final TaskRepository taskRepository;
 
+    @Inject
     public TaskService(SecurityIdentity securityIdentity, TaskRepository taskRepository) {
         this.securityIdentity = securityIdentity;
         this.taskRepository = taskRepository;
