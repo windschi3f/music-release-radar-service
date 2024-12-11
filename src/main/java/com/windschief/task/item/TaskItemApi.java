@@ -1,4 +1,4 @@
-package com.windschief.task.api;
+package com.windschief.task.item;
 
 import java.util.List;
 
@@ -12,9 +12,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import com.windschief.task.dto.TaskItemRequestDto;
-import com.windschief.task.dto.TaskItemResponseDto;
-import com.windschief.task.dto.TaskRequestDto;
+import com.windschief.task.TaskRequestDto;
+
 import io.quarkus.security.Authenticated;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;

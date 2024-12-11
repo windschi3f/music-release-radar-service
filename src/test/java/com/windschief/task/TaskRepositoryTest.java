@@ -5,15 +5,14 @@ import java.util.Optional;
 
 import jakarta.inject.Inject;
 
-import com.windschief.task.domain.Platform;
-import com.windschief.task.domain.Task;
-import com.windschief.task.domain.TaskItem;
-import com.windschief.task.domain.TaskItemType;
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.windschief.task.item.TaskItem;
+import com.windschief.task.item.TaskItemType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -102,8 +101,10 @@ class TaskRepositoryTest {
         Task taskRetrieved = taskRepository.findById(task.getId());
 
         // THEN
-        assertFalse(Hibernate.isInitialized(taskRetrieved.getTaskItems()), "TaskItems should not be initialized upon Task retrieval");
-        assertEquals(1, taskRetrieved.getTaskItems().size(), "TaskItems should be accessible within the same transaction");
+        assertFalse(Hibernate.isInitialized(taskRetrieved.getTaskItems()),
+                "TaskItems should not be initialized upon Task retrieval");
+        assertEquals(1, taskRetrieved.getTaskItems().size(),
+                "TaskItems should be accessible within the same transaction");
     }
 
     @Test

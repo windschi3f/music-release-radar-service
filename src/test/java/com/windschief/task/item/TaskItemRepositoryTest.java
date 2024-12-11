@@ -1,13 +1,14 @@
-package com.windschief.task;
+package com.windschief.task.item;
 
 import java.util.List;
 
 import jakarta.inject.Inject;
 
-import com.windschief.task.domain.Platform;
-import com.windschief.task.domain.Task;
-import com.windschief.task.domain.TaskItem;
-import com.windschief.task.domain.TaskItemType;
+import com.windschief.task.Platform;
+import com.windschief.task.Task;
+import com.windschief.task.TaskItemRepository;
+import com.windschief.task.TaskRepository;
+
 import io.quarkus.test.TestTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
@@ -64,7 +65,8 @@ class TaskItemRepositoryTest {
         taskRepository.persist(task);
 
         // WHEN
-        long deletedCount = taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(task.getId(), taskItem.getId(), task.getUserId());
+        long deletedCount = taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(task.getId(), taskItem.getId(),
+                task.getUserId());
 
         // THEN
         assertEquals(1, deletedCount);

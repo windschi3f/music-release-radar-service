@@ -1,4 +1,4 @@
-package com.windschief.task.service;
+package com.windschief.task;
 
 import java.util.List;
 
@@ -6,12 +6,6 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
-
-import com.windschief.task.TaskRepository;
-import com.windschief.task.api.TaskApi;
-import com.windschief.task.domain.Task;
-import com.windschief.task.dto.TaskRequestDto;
-import com.windschief.task.dto.TaskResponseDto;
 import io.quarkus.security.identity.SecurityIdentity;
 
 @RequestScoped

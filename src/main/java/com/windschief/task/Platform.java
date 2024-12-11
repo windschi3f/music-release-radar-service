@@ -1,4 +1,4 @@
-package com.windschief.task.domain;
+package com.windschief.task;
 
 public enum Platform {
     SPOTIFY,

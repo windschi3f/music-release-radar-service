@@ -1,4 +1,4 @@
-package com.windschief.task.api;
+package com.windschief.task;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -10,10 +10,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import com.windschief.task.dto.TaskResponseDto;
-import com.windschief.task.dto.TaskRequestDto;
-
 import io.quarkus.security.Authenticated;
 
 import java.util.List;

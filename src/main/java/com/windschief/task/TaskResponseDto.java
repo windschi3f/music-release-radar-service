@@ -1,9 +1,6 @@
-package com.windschief.task.dto;
+package com.windschief.task;
 
 import java.time.Instant;
-
-import com.windschief.task.domain.Platform;
-import com.windschief.task.domain.Task;
 
 public record TaskResponseDto(
         Long id,
@@ -22,7 +19,6 @@ public record TaskResponseDto(
                 task.getExecutionIntervalDays(),
                 task.getLastTimeExecuted(),
                 task.getCheckFrom(),
-                task.isActive()
-        );
+                task.isActive());
     }
 }

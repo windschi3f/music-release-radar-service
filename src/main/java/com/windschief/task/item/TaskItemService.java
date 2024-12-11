@@ -1,4 +1,4 @@
-package com.windschief.task.service;
+package com.windschief.task.item;
 
 import java.util.List;
 
@@ -7,13 +7,9 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 
+import com.windschief.task.Task;
 import com.windschief.task.TaskItemRepository;
 import com.windschief.task.TaskRepository;
-import com.windschief.task.api.TaskItemApi;
-import com.windschief.task.domain.Task;
-import com.windschief.task.domain.TaskItem;
-import com.windschief.task.dto.TaskItemRequestDto;
-import com.windschief.task.dto.TaskItemResponseDto;
 import io.quarkus.security.identity.SecurityIdentity;
 
 @RequestScoped
@@ -24,7 +20,8 @@ public class TaskItemService implements TaskItemApi {
     private final TaskItemRepository taskItemRepository;
 
     @Inject
-    public TaskItemService(SecurityIdentity securityIdentity, TaskRepository taskRepository, TaskItemRepository taskItemRepository) {
+    public TaskItemService(SecurityIdentity securityIdentity, TaskRepository taskRepository,
+            TaskItemRepository taskItemRepository) {
         this.securityIdentity = securityIdentity;
         this.taskRepository = taskRepository;
         this.taskItemRepository = taskItemRepository;
@@ -68,7 +65,8 @@ public class TaskItemService implements TaskItemApi {
 
     @Override
     public Response deleteTaskItem(Long taskId, Long taskItemId) {
-        long deletedCount = taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId, securityIdentity.getPrincipal().getName());
+        long deletedCount = taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId,
+                securityIdentity.getPrincipal().getName());
         if (deletedCount == 0) {
             return Response.status(Response.Status.NOT_FOUND).build();
         } else {

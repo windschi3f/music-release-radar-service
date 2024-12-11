@@ -1,4 +1,4 @@
-package com.windschief.task.service;
+package com.windschief.task;
 
 import java.security.Principal;
 import java.time.Instant;
@@ -7,11 +7,6 @@ import java.util.List;
 
 import jakarta.ws.rs.core.Response;
 
-import com.windschief.task.TaskRepository;
-import com.windschief.task.domain.Platform;
-import com.windschief.task.domain.Task;
-import com.windschief.task.dto.TaskRequestDto;
-import com.windschief.task.dto.TaskResponseDto;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,7 +1,4 @@
-package com.windschief.task.dto;
-
-import com.windschief.task.domain.TaskItem;
-import com.windschief.task.domain.TaskItemType;
+package com.windschief.task.item;
 
 public record TaskItemResponseDto(
         Long id,
@@ -14,7 +11,6 @@ public record TaskItemResponseDto(
         return new TaskItemResponseDto(
                 taskItem.getId(),
                 taskItem.getItemType(),
-                taskItem.getExternalReferenceId()
-        );
+                taskItem.getExternalReferenceId());
     }
 }

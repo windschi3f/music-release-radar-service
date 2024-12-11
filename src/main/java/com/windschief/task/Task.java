@@ -1,8 +1,10 @@
-package com.windschief.task.domain;
+package com.windschief.task;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.windschief.task.item.TaskItem;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;

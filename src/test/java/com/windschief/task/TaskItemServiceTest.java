@@ -1,5 +1,4 @@
-package com.windschief.task.service;
-
+package com.windschief.task;
 
 import java.security.Principal;
 import java.util.Arrays;
@@ -7,13 +6,12 @@ import java.util.List;
 
 import jakarta.ws.rs.core.Response;
 
-import com.windschief.task.TaskItemRepository;
-import com.windschief.task.TaskRepository;
-import com.windschief.task.domain.Task;
-import com.windschief.task.domain.TaskItem;
-import com.windschief.task.domain.TaskItemType;
-import com.windschief.task.dto.TaskItemRequestDto;
-import com.windschief.task.dto.TaskItemResponseDto;
+import com.windschief.task.item.TaskItem;
+import com.windschief.task.item.TaskItemRequestDto;
+import com.windschief.task.item.TaskItemResponseDto;
+import com.windschief.task.item.TaskItemService;
+import com.windschief.task.item.TaskItemType;
+
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
