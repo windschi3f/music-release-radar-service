@@ -42,6 +42,7 @@ class TaskItemServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void givenExistingTaskItems_whenGetTaskItemsIsCalled_thenAllTaskItemsAreReturned() {
         // Given
         Long taskId = 1L;
@@ -50,10 +51,12 @@ class TaskItemServiceTest {
         when(taskItemRepository.findByTaskId(taskId)).thenReturn(Arrays.asList(item1, item2));
 
         // When
-        List<TaskItemResponseDto> result = taskItemService.getTaskItems(taskId);
+        Response result = taskItemService.getTaskItems(taskId);
 
         // Then
-        assertEquals(2, result.size());
+        assertEquals(Response.Status.OK.getStatusCode(), result.getStatus());
+        List<TaskItemResponseDto> taskItems = (List<TaskItemResponseDto>) result.getEntity();
+        assertEquals(2, taskItems.size());
         verify(taskItemRepository).findByTaskId(taskId);
     }
 

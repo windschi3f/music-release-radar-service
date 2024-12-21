@@ -34,7 +34,7 @@ public interface TaskItemApi {
         @Operation(summary = "Get all task items")
         @APIResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskItemResponseDto.class, type = SchemaType.ARRAY)))
         @Authenticated
-        List<TaskItemResponseDto> getTaskItems(
+        Response getTaskItems(
                         @Parameter(description = "ID of the task", required = true) @PathParam("taskId") Long taskId);
 
         @POST

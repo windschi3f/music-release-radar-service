@@ -28,10 +28,18 @@ public class TaskItemService implements TaskItemApi {
     }
 
     @Override
-    public List<TaskItemResponseDto> getTaskItems(Long taskId) {
-        return taskItemRepository.findByTaskId(taskId).stream()
+    public Response getTaskItems(Long taskId) {
+        Task task = taskRepository.findById(taskId);
+        if (task == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        } else if (!task.getUserId().equals(securityIdentity.getPrincipal().getName())) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+
+        return Response.ok(taskItemRepository.findByTaskId(taskId).stream()
                 .map(TaskItemResponseDto::from)
-                .toList();
+                .toList())
+                .build();
     }
 
     @Override
@@ -40,9 +48,7 @@ public class TaskItemService implements TaskItemApi {
         Task task = taskRepository.findById(taskId);
         if (task == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
-        if (!task.getUserId().equals(securityIdentity.getPrincipal().getName())) {
+        } else if (!task.getUserId().equals(securityIdentity.getPrincipal().getName())) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
