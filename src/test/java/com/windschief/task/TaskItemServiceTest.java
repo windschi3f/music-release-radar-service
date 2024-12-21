@@ -1,9 +1,8 @@
 package com.windschief.task;
 
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.Optional;
 import jakarta.ws.rs.core.Response;
 
 import com.windschief.task.item.TaskItem;
@@ -12,7 +11,6 @@ import com.windschief.task.item.TaskItemResponseDto;
 import com.windschief.task.item.TaskItemService;
 import com.windschief.task.item.TaskItemType;
 
-import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,20 +23,14 @@ import static org.mockito.Mockito.when;
 
 @QuarkusTest
 class TaskItemServiceTest {
-
+    private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
     private final TaskItemRepository taskItemRepository = mock(TaskItemRepository.class);
-    private final SecurityIdentity securityIdentity = mock(SecurityIdentity.class);
-    private final Principal principal = mock(Principal.class);
-
     private TaskItemService taskItemService;
 
     @BeforeEach
     public void setup() {
-        taskItemService = new TaskItemService(securityIdentity, taskRepository, taskItemRepository);
-
-        when(securityIdentity.getPrincipal()).thenReturn(principal);
-        when(principal.getName()).thenReturn("testUser");
+        taskItemService = new TaskItemService(taskAccess, taskRepository, taskItemRepository);
     }
 
     @Test
@@ -46,8 +38,12 @@ class TaskItemServiceTest {
     void givenExistingTaskItems_whenGetTaskItemsIsCalled_thenAllTaskItemsAreReturned() {
         // Given
         Long taskId = 1L;
+        Task task = new Task();
         TaskItem item1 = new TaskItem();
         TaskItem item2 = new TaskItem();
+
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
         when(taskItemRepository.findByTaskId(taskId)).thenReturn(Arrays.asList(item1, item2));
 
         // When
@@ -67,6 +63,7 @@ class TaskItemServiceTest {
         Task task = new Task();
         task.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
 
         TaskItemRequestDto dto1 = new TaskItemRequestDto(TaskItemType.PLAYLIST, "1");
         TaskItemRequestDto dto2 = new TaskItemRequestDto(TaskItemType.PLAYLIST, "2");
@@ -84,7 +81,10 @@ class TaskItemServiceTest {
     void givenNonExistentTask_whenCreateTaskItemsIsCalled_thenResponseIsNotFound() {
         // Given
         Long taskId = 1L;
-        when(taskRepository.findById(taskId)).thenReturn(null);
+        Task task = null;
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(
+                Optional.of(Response.status(Response.Status.NOT_FOUND).build()));
 
         // When
         Response response = taskItemService.createTaskItems(taskId, List.of());
@@ -100,6 +100,8 @@ class TaskItemServiceTest {
         Task task = new Task();
         task.setUserId("otherUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(
+                Optional.of(Response.status(Response.Status.UNAUTHORIZED).build()));
 
         // When
         Response response = taskItemService.createTaskItems(taskId, List.of());
@@ -113,7 +115,12 @@ class TaskItemServiceTest {
         // Given
         Long taskId = 1L;
         Long taskItemId = 2L;
-        when(taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId, "testUser")).thenReturn(1L);
+        Task task = new Task();
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
+        when(taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId, taskAccess.getCurrentUserId()))
+                .thenReturn(1L);
+        when(taskAccess.getCurrentUserId()).thenReturn("testUser");
 
         // When
         Response response = taskItemService.deleteTaskItem(taskId, taskItemId);
@@ -127,7 +134,12 @@ class TaskItemServiceTest {
         // Given
         Long taskId = 1L;
         Long taskItemId = 2L;
-        when(taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId, "testUser")).thenReturn(0L);
+        Task task = new Task();
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
+        when(taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId, taskAccess.getCurrentUserId()))
+                .thenReturn(0L);
+        when(taskAccess.getCurrentUserId()).thenReturn("testUser");
 
         // When
         Response response = taskItemService.deleteTaskItem(taskId, taskItemId);

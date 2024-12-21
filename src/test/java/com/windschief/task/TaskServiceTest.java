@@ -1,13 +1,12 @@
 package com.windschief.task;
 
-import java.security.Principal;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.ws.rs.core.Response;
 
-import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,19 +21,14 @@ import static org.mockito.Mockito.when;
 
 @QuarkusTest
 class TaskServiceTest {
-
+    private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
-    private final SecurityIdentity securityIdentity = mock(SecurityIdentity.class);
-    private final Principal principal = mock(Principal.class);
-
     private TaskService taskService;
 
     @BeforeEach
     public void setup() {
-        taskService = new TaskService(securityIdentity, taskRepository);
-
-        when(securityIdentity.getPrincipal()).thenReturn(principal);
-        when(principal.getName()).thenReturn("testUser");
+        taskService = new TaskService(taskAccess, taskRepository);
+        when(taskAccess.getCurrentUserId()).thenReturn("testUser");
     }
 
     @Test
@@ -59,6 +53,7 @@ class TaskServiceTest {
         Task task = new Task();
         task.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
 
         // When
         Response response = taskService.getTask(taskId);
@@ -71,7 +66,10 @@ class TaskServiceTest {
     void givenNonExistentTask_whenGetTaskIsCalled_thenResponseIsNotFound() {
         // Given
         Long taskId = 1L;
-        when(taskRepository.findById(taskId)).thenReturn(null);
+        Task task = null;
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(
+                Optional.of(Response.status(Response.Status.NOT_FOUND).build()));
 
         // When
         Response response = taskService.getTask(taskId);
@@ -87,6 +85,8 @@ class TaskServiceTest {
         Task task = new Task();
         task.setUserId("otherUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(
+                Optional.of(Response.status(Response.Status.UNAUTHORIZED).build()));
 
         // When
         Response response = taskService.getTask(taskId);
@@ -121,6 +121,7 @@ class TaskServiceTest {
         Task existingTask = new Task();
         existingTask.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
+        when(taskAccess.checkAccess(existingTask)).thenReturn(Optional.empty());
 
         TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true);
 
@@ -136,7 +137,10 @@ class TaskServiceTest {
     void givenNonExistentTask_whenUpdateTaskIsCalled_thenResponseIsNotFound() {
         // Given
         Long taskId = 1L;
-        when(taskRepository.findById(taskId)).thenReturn(null);
+        Task task = null;
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(
+                Optional.of(Response.status(Response.Status.NOT_FOUND).build()));
 
         TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true);
 
@@ -154,6 +158,8 @@ class TaskServiceTest {
         Task existingTask = new Task();
         existingTask.setUserId("otherUser");
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
+        when(taskAccess.checkAccess(existingTask)).thenReturn(
+                Optional.of(Response.status(Response.Status.UNAUTHORIZED).build()));
 
         TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true);
 
@@ -168,6 +174,9 @@ class TaskServiceTest {
     void givenExistingTask_whenDeleteTaskIsCalled_thenTaskIsDeletedAndResponseIsNoContent() {
         // Given
         Long taskId = 1L;
+        Task task = new Task();
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
         when(taskRepository.deleteByTaskIdAndUserId(taskId, "testUser")).thenReturn(1L);
 
         // When
@@ -181,6 +190,9 @@ class TaskServiceTest {
     void givenNonExistentTask_whenDeleteTaskIsCalled_thenResponseIsNotFound() {
         // Given
         Long taskId = 1L;
+        Task task = new Task();
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
         when(taskRepository.deleteByTaskIdAndUserId(taskId, "testUser")).thenReturn(0L);
 
         // When
