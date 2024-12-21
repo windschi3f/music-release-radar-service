@@ -1,28 +1,26 @@
 package com.windschief.task.item;
 
 import java.util.List;
-
+import java.util.Optional;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
-
 import com.windschief.task.Task;
 import com.windschief.task.TaskItemRepository;
 import com.windschief.task.TaskRepository;
-import io.quarkus.security.identity.SecurityIdentity;
+import com.windschief.task.TaskAccess;
 
 @RequestScoped
 public class TaskItemService implements TaskItemApi {
-
-    private final SecurityIdentity securityIdentity;
+    private final TaskAccess taskAccess;
     private final TaskRepository taskRepository;
     private final TaskItemRepository taskItemRepository;
 
     @Inject
-    public TaskItemService(SecurityIdentity securityIdentity, TaskRepository taskRepository,
+    public TaskItemService(TaskAccess taskAccess, TaskRepository taskRepository,
             TaskItemRepository taskItemRepository) {
-        this.securityIdentity = securityIdentity;
+        this.taskAccess = taskAccess;
         this.taskRepository = taskRepository;
         this.taskItemRepository = taskItemRepository;
     }
@@ -30,10 +28,9 @@ public class TaskItemService implements TaskItemApi {
     @Override
     public Response getTaskItems(Long taskId) {
         Task task = taskRepository.findById(taskId);
-        if (task == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        } else if (!task.getUserId().equals(securityIdentity.getPrincipal().getName())) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+        Optional<Response> accessCheck = taskAccess.checkAccess(task);
+        if (accessCheck.isPresent()) {
+            return accessCheck.get();
         }
 
         return Response.ok(taskItemRepository.findByTaskId(taskId).stream()
@@ -46,10 +43,9 @@ public class TaskItemService implements TaskItemApi {
     @Transactional
     public Response createTaskItems(Long taskId, List<TaskItemRequestDto> taskItemRequestDtos) {
         Task task = taskRepository.findById(taskId);
-        if (task == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        } else if (!task.getUserId().equals(securityIdentity.getPrincipal().getName())) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+        Optional<Response> accessCheck = taskAccess.checkAccess(task);
+        if (accessCheck.isPresent()) {
+            return accessCheck.get();
         }
 
         List<TaskItem> taskItems = taskItemRequestDtos.stream()
@@ -59,7 +55,6 @@ public class TaskItemService implements TaskItemApi {
                     return taskItem;
                 })
                 .toList();
-
         taskItemRepository.persist(taskItems);
 
         return Response.status(Response.Status.CREATED)
@@ -71,12 +66,17 @@ public class TaskItemService implements TaskItemApi {
 
     @Override
     public Response deleteTaskItem(Long taskId, Long taskItemId) {
+        Task task = taskRepository.findById(taskId);
+        Optional<Response> accessCheck = taskAccess.checkAccess(task);
+        if (accessCheck.isPresent()) {
+            return accessCheck.get();
+        }
+
         long deletedCount = taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId,
-                securityIdentity.getPrincipal().getName());
+                taskAccess.getCurrentUserId());
         if (deletedCount == 0) {
             return Response.status(Response.Status.NOT_FOUND).build();
-        } else {
-            return Response.noContent().build();
         }
+        return Response.noContent().build();
     }
 }

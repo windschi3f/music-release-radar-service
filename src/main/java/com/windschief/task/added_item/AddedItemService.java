@@ -1,24 +1,26 @@
 package com.windschief.task.added_item;
 
+import java.util.Optional;
+
 import com.windschief.task.Task;
+import com.windschief.task.TaskAccess;
 import com.windschief.task.TaskRepository;
 
-import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 
 @RequestScoped
 public class AddedItemService implements AddedItemApi {
-    private final SecurityIdentity securityIdentity;
+    private final TaskAccess taskAccess;
     private final TaskRepository taskRepository;
     private final AddedItemRepository addedItemRepository;
 
     @Inject
-    public AddedItemService(SecurityIdentity securityIdentity,
+    public AddedItemService(TaskAccess taskAccess,
             TaskRepository taskRepository,
             AddedItemRepository addedItemRepository) {
-        this.securityIdentity = securityIdentity;
+        this.taskAccess = taskAccess;
         this.taskRepository = taskRepository;
         this.addedItemRepository = addedItemRepository;
     }
@@ -27,10 +29,9 @@ public class AddedItemService implements AddedItemApi {
     public Response getAddedItems(Long taskId) {
         Task task = taskRepository.findById(taskId);
 
-        if (task == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        } else if (!task.getUserId().equals(securityIdentity.getPrincipal().getName())) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+        Optional<Response> accessCheck = taskAccess.checkAccess(task);
+        if (accessCheck.isPresent()) {
+            return accessCheck.get();
         }
 
         return Response.ok(addedItemRepository.findByTaskId(taskId).stream()
