@@ -28,20 +28,24 @@ public class SpotifyTokenRetrieval {
     }
 
     private static String getAuthorizationCode() {
-        String url = AUTH_URL + "?client_id=" + CLIENT_ID + "&response_type=code&redirect_uri=" + URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8) + "&scope=user-read-private";
+        String url = AUTH_URL + "?client_id=" + CLIENT_ID + "&response_type=code&redirect_uri="
+                + URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8) + "&scope=user-read-private";
         System.out.println("Please open the following URL in your browser and authorize the application:");
         System.out.println(url);
-        System.out.println("After authorization, you will be redirected to a URL. Please enter the 'code' parameter from that URL:");
+        System.out.println(
+                "After authorization, you will be redirected to a URL. Please enter the URL or the 'code' parameter:");
 
         Scanner scanner = new Scanner(System.in);
-        String redirectedUrl = scanner.nextLine();
+        String input = scanner.nextLine();
         scanner.close();
 
-        if (redirectedUrl.contains("code=")) {
-            return redirectedUrl.split("code=")[1].split("&")[0];
-        } else {
-            System.out.println("Invalid URL or code parameter missing.");
+        if (input.isBlank()) {
+            System.out.println("Input missing.");
             return null;
+        } else if (input.contains("code=")) {
+            return input.split("code=")[1].split("&")[0];
+        } else {
+            return input;
         }
     }
 
@@ -53,8 +57,7 @@ public class SpotifyTokenRetrieval {
                 "code", authorizationCode,
                 "redirect_uri", REDIRECT_URI,
                 "client_id", CLIENT_ID,
-                "client_secret", CLIENT_SECRET
-        ));
+                "client_secret", CLIENT_SECRET));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI(TOKEN_URL))
@@ -82,4 +85,3 @@ public class SpotifyTokenRetrieval {
         return sj.toString();
     }
 }
-
