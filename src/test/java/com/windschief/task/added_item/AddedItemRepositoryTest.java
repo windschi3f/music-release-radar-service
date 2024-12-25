@@ -85,4 +85,73 @@ class AddedItemRepositoryTest {
         assertEquals(1, deletedCount);
         assertTrue(addedItemRepository.findByTaskId(task.getId()).isEmpty());
     }
+
+    @Test
+    @TestTransaction
+    void givenNoAddedItems_whenGetLastAddedAt_thenReturnsNull() {
+        // GIVEN
+        Task task = new Task();
+        task.setUserId("user");
+        task.setPlatform(Platform.SPOTIFY);
+        taskRepository.persist(task);
+
+        // WHEN
+        Instant lastAddedAt = addedItemRepository.getLastAddedAt(task.getId());
+
+        // THEN
+        assertEquals(null, lastAddedAt);
+    }
+
+    @Test
+    @TestTransaction
+    void givenSingleAddedItem_whenGetLastAddedAt_thenReturnsItemTimestamp() {
+        // GIVEN
+        Task task = new Task();
+        task.setUserId("user");
+        task.setPlatform(Platform.SPOTIFY);
+        taskRepository.persist(task);
+
+        Instant timestamp = Instant.now();
+        AddedItem addedItem = new AddedItem();
+        addedItem.setTask(task);
+        addedItem.setExternalId("spotify:track:123");
+        addedItem.setAddedAt(timestamp);
+        addedItemRepository.persist(addedItem);
+
+        // WHEN
+        Instant lastAddedAt = addedItemRepository.getLastAddedAt(task.getId());
+
+        // THEN
+        assertEquals(timestamp, lastAddedAt);
+    }
+
+    @Test
+    @TestTransaction
+    void givenMultipleAddedItems_whenGetLastAddedAt_thenReturnsLatestTimestamp() {
+        // GIVEN
+        Task task = new Task();
+        task.setUserId("user");
+        task.setPlatform(Platform.SPOTIFY);
+        taskRepository.persist(task);
+
+        Instant earlierTimestamp = Instant.now().minusSeconds(3600);
+        AddedItem earlierItem = new AddedItem();
+        earlierItem.setTask(task);
+        earlierItem.setExternalId("spotify:track:123");
+        earlierItem.setAddedAt(earlierTimestamp);
+        addedItemRepository.persist(earlierItem);
+
+        Instant laterTimestamp = Instant.now();
+        AddedItem laterItem = new AddedItem();
+        laterItem.setTask(task);
+        laterItem.setExternalId("spotify:track:456");
+        laterItem.setAddedAt(laterTimestamp);
+        addedItemRepository.persist(laterItem);
+
+        // WHEN
+        Instant lastAddedAt = addedItemRepository.getLastAddedAt(task.getId());
+
+        // THEN
+        assertEquals(laterTimestamp, lastAddedAt);
+    }
 }
