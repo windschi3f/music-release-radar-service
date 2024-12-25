@@ -1,6 +1,7 @@
 package com.windschief;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.windschief.spotify.model.AlbumsResponse;
 import com.windschief.spotify.model.SearchResponse;
 
 import java.net.URI;
@@ -11,33 +12,51 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 public class SpotifyApiPlayground {
-    private static final String ACCESS_TOKEN = "BQBtEtaOgg2DmN5M1TSZ_X4lpp7gwBTEeF4bhL-dFw0KcHajwWb6rPFuL-TfwFyYhgbG2mAy37i67VrY5B22jtR44I3XTnStNIQXohjx3ax_hAYIlUcX2XZGyDBIfVTpHFGAOsH0SpZMBvs-A4-v0aqxX9q6aBXqTDGcy60FDOWCx5p5MFBdFk2qJFkWtWEiLAedh1g";
-    private static final String SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1";
-    private static final ObjectMapper mapper = new ObjectMapper();
+        private static final String ACCESS_TOKEN = "BQBx0KCUCw0G5U37L2mEcNKpCh3k3go8JKAj3gs8pGvcPVERwKE7o3CkSPu9iiQ1SpBaikHMaDhLcoWOCM25fIQKEXodZqr-s0Cm7fGa5ODLaLsqs4XkwWjrfrtpOygHf0iywPE70rn-L305pyg_yMQ1SKQ_IMKfkoHh9n-IwmydewnE0jCdX0deNlgGlGSW4K6Iydc";
+        private static final String SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1";
+        private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static void main(String[] args) throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
+        public static void main(String[] args) throws Exception {
+                HttpClient client = HttpClient.newHttpClient();
 
-        testSearch(client, "artist:Miles Davis year:1959", "track", "US", 10);
-    }
+                testSearch(client, "artist:Miles Davis year:1959", "track", "US", 10);
+                getArtistAlbums("0kbYTNQb4Pb1rPbbaF0pT4", client);
+        }
 
-    private static void testSearch(HttpClient client,
-            String query, String type, String market, int limit) throws Exception {
-        String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
-        String url = String.format("%s/search?q=%s&type=%s&market=%s&limit=%d",
-                SPOTIFY_API_BASE_URL, encodedQuery, type, market, limit);
+        private static void testSearch(HttpClient client,
+                        String query, String type, String market, int limit) throws Exception {
+                String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+                String url = String.format("%s/search?q=%s&type=%s&market=%s&limit=%d",
+                                SPOTIFY_API_BASE_URL, encodedQuery, type, market, limit);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Authorization", "Bearer " + ACCESS_TOKEN)
-                .GET()
-                .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                                .uri(URI.create(url))
+                                .header("Authorization", "Bearer " + ACCESS_TOKEN)
+                                .GET()
+                                .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        SearchResponse searchResponse = mapper.readValue(response.body(), SearchResponse.class);
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                SearchResponse searchResponse = mapper.readValue(response.body(), SearchResponse.class);
 
-        searchResponse.tracks().items().forEach(track -> System.out.printf("Track: %s by %s%n",
-                track.name(),
-                track.artists().get(0).name()));
-    }
+                searchResponse.tracks().items().forEach(track -> System.out.printf("Track: %s by %s%n",
+                                track.name(),
+                                track.artists().get(0).id()));
+        }
+
+        private static void getArtistAlbums(String artistId, HttpClient client) throws Exception {
+                String url = String.format("%s/artists/%s/albums?include_groups=album,single",
+                                SPOTIFY_API_BASE_URL, artistId);
+
+                HttpRequest request = HttpRequest.newBuilder()
+                                .uri(URI.create(url))
+                                .header("Authorization", "Bearer " + ACCESS_TOKEN)
+                                .GET()
+                                .build();
+
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                AlbumsResponse albumsResponse = mapper.readValue(response.body(), AlbumsResponse.class);
+
+                albumsResponse.items().forEach(
+                                album -> System.out.printf("Album: %s (%s)%n", album.name(), album.release_date()));
+        }
 }
