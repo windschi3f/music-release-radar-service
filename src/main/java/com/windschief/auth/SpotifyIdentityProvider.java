@@ -25,19 +25,20 @@ public class SpotifyIdentityProvider implements IdentityProvider<TokenAuthentica
     }
 
     @Override
-    public Uni<SecurityIdentity> authenticate(TokenAuthenticationRequest request, AuthenticationRequestContext context) {
-        return tokenValidator.validateToken(request.getToken().getToken())
-            .onItem().transform(spotifyUser -> {
-                if (spotifyUser != null) {
-                    return QuarkusSecurityIdentity.builder()
-                        .setPrincipal(spotifyUser::id)
-                        .addRole("user")
-                        .addAttribute("displayName", spotifyUser.displayName())
-                        .addAttribute("email", spotifyUser.email())
-                        .addAttribute("country", spotifyUser.country())
-                        .build();
-                }
-                return null;
-            });
+    public Uni<SecurityIdentity> authenticate(TokenAuthenticationRequest request,
+            AuthenticationRequestContext context) {
+        return tokenValidator.validateToken(request.getToken().getToken(), request.getAttribute("refreshToken"))
+                .onItem().transform(spotifyUser -> {
+                    if (spotifyUser != null) {
+                        return QuarkusSecurityIdentity.builder()
+                                .setPrincipal(spotifyUser::id)
+                                .addRole("user")
+                                .addAttribute("displayName", spotifyUser.displayName())
+                                .addAttribute("email", spotifyUser.email())
+                                .addAttribute("country", spotifyUser.country())
+                                .build();
+                    }
+                    return null;
+                });
     }
 }
