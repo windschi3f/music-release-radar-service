@@ -59,4 +59,7 @@ public interface SpotifyApi {
                         @HeaderParam("Authorization") String basicAuth,
                         @FormParam("grant_type") String grantType,
                         @FormParam("refresh_token") String refreshToken);
+
+        @GET
+        <T> T getNextPage(@HeaderParam("Authorization") String authHeader, Class<T> responseType);
 }
