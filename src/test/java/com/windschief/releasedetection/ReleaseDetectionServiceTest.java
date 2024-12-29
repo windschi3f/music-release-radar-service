@@ -65,7 +65,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenNewRelease_whenDetectNewAlbumIds_thenReturnAlbumIds() {
+    public void givenNewRelease_whenDetectNewAlbumIds_thenDetectNewReleases() {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -146,7 +146,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenReleaseBeforeLastAddedAt_whenDetectNewAlbumIds_thenReturnAlbumIds() {
+    public void givenReleaseBeforeLastAddedAt_whenDetectNewAlbumIds_thenDetectNoNewReleases() {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -186,7 +186,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenNullLastAddedAt_whenDetectNewAlbumIds_thenReturnAllAlbumIds() {
+    public void givenNullLastAddedAt_whenDetectNewAlbumIds_thenDetectNewReleases() {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -215,7 +215,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenMultiplePages_whenDetectNewAlbumIds_thenReturnAllAlbumIds() {
+    public void givenMultiplePages_whenDetectNewAlbumIds_thenDetectNewReleases() {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
