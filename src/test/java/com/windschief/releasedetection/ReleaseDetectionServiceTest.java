@@ -3,6 +3,7 @@ package com.windschief.releasedetection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -94,6 +95,7 @@ public class ReleaseDetectionServiceTest {
                 List.of(albumItem));
 
         when(spotifyApi.getArtistAlbums(accessToken, "artistId", "album,single", 50, 0)).thenReturn(albumsResponse);
+        when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
         // WHEN
         Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
@@ -101,6 +103,46 @@ public class ReleaseDetectionServiceTest {
         // THEN
         assertEquals(1, albumIds.size());
         assertTrue(albumIds.contains("albumId"));
+    }
+
+    @Test
+    public void givenAlreadyAddedNewRelease_whenDetectNewAlbumIds_thenDetectNoNewReleases() {
+        // GIVEN
+        Task task = mock(Task.class);
+        when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
+        TaskItem taskItem = mock(TaskItem.class);
+        when(taskItem.getItemType()).thenReturn(TaskItemType.ARTIST);
+        when(taskItem.getExternalReferenceId()).thenReturn("artistId");
+        when(task.getTaskItems()).thenReturn(List.of(taskItem));
+        when(task.getUserId()).thenReturn("userId");
+        when(task.getId()).thenReturn(1L);
+
+        String accessToken = "accessToken";
+        when(spotifyTokenValidator.getValidTokenForUser("userId")).thenReturn(accessToken);
+
+        Instant lastAddedAt = Instant.parse("2024-12-24T10:21:33.00Z");
+        when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
+
+        AlbumItem albumItem = new AlbumItem(null, 0, null, null, null, "albumId",
+                null, null, "2024-12-26", "day", null, null, null, null, null);
+
+        AlbumsResponse albumsResponse = new AlbumsResponse(
+                null,
+                20,
+                null,
+                0,
+                null,
+                1,
+                List.of(albumItem));
+
+        when(spotifyApi.getArtistAlbums(accessToken, "artistId", "album,single", 50, 0)).thenReturn(albumsResponse);
+        when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(true);
+
+        // WHEN
+        Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
+
+        // THEN
+        assertEquals(0, albumIds.size());
     }
 
     @Test
@@ -134,6 +176,7 @@ public class ReleaseDetectionServiceTest {
                 List.of(albumItem));
 
         when(spotifyApi.getArtistAlbums(accessToken, "artistId", "album,single", 50, 0)).thenReturn(albumsResponse);
+        when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
         // WHEN
         Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
@@ -161,6 +204,7 @@ public class ReleaseDetectionServiceTest {
                 null, null, "2024-12-24", "day", null, null, null, null, null);
         AlbumsResponse albumsResponse = new AlbumsResponse(null, 20, null, 0, null, 1, List.of(albumItem));
         when(spotifyApi.getArtistAlbums("accessToken", "artistId", "album,single", 50, 0)).thenReturn(albumsResponse);
+        when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
         // WHEN
         Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
@@ -194,6 +238,7 @@ public class ReleaseDetectionServiceTest {
 
         when(spotifyApi.getArtistAlbums("accessToken", "artistId", "album,single", 50, 0)).thenReturn(response1);
         when(spotifyApi.getNextPage("accessToken", AlbumsResponse.class)).thenReturn(response2);
+        when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
         // WHEN
         Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
@@ -226,6 +271,7 @@ public class ReleaseDetectionServiceTest {
         AlbumsResponse response = new AlbumsResponse(null, 20, null, 0, null, 2, List.of(monthAlbum, yearAlbum));
 
         when(spotifyApi.getArtistAlbums("accessToken", "artistId", "album,single", 50, 0)).thenReturn(response);
+        when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
         // WHEN
         Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
@@ -256,6 +302,7 @@ public class ReleaseDetectionServiceTest {
         AlbumsResponse response = new AlbumsResponse(null, 20, null, 0, null, 1, List.of(album));
 
         when(spotifyApi.getArtistAlbums("accessToken", "artistId", "album,single", 50, 0)).thenReturn(response);
+        when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
         // WHEN
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -265,4 +312,5 @@ public class ReleaseDetectionServiceTest {
         // THEN
         assertEquals("Unknown date precision: unknown", exception.getMessage());
     }
+
 }

@@ -54,6 +54,7 @@ public class ReleaseDetectionService {
                 .map(artistId -> getAllAlbums(accessToken, artistId))
                 .flatMap(albums -> albums.stream())
                 .filter(album -> isAlbumAfterDate(album, lastAddedAt))
+                .filter(album -> !addedItemRepository.existsByExternalIdAndTaskId(album.id(), task.getId()))
                 .map(album -> album.id())
                 .collect(Collectors.toSet());
     }

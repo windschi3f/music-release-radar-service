@@ -12,6 +12,10 @@ public class AddedItemRepository implements PanacheRepository<AddedItem> {
         return list("task.id", taskId);
     }
 
+    public boolean existsByExternalIdAndTaskId(String externalId, Long taskId) {
+        return count("externalId = ?1 and task.id = ?2", externalId, taskId) > 0;
+    }
+
     public long deleteByTaskIdAndUserId(Long taskId, String userId) {
         return delete("task.id = ?1 and task.userId = ?2", taskId, userId);
     }

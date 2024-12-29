@@ -154,4 +154,41 @@ class AddedItemRepositoryTest {
         // THEN
         assertEquals(laterTimestamp, lastAddedAt);
     }
+
+    @Test
+    @TestTransaction
+    void givenNoAddedItems_whenExistsByExternalReferenceIdAndTaskId_thenReturnsFalse() {
+        // GIVEN
+        Task task = new Task();
+        task.setUserId("user");
+        task.setPlatform(Platform.SPOTIFY);
+        taskRepository.persist(task);
+
+        // WHEN
+        boolean exists = addedItemRepository.existsByExternalIdAndTaskId("spotify:track:123", task.getId());
+
+        // THEN
+        assertEquals(false, exists);
+    }
+
+    @Test
+    @TestTransaction
+    void givenAddedItem_whenExistsByExternalReferenceIdAndTaskId_thenReturnsTrue() {
+        // GIVEN
+        Task task = new Task();
+        task.setUserId("user");
+        task.setPlatform(Platform.SPOTIFY);
+        taskRepository.persist(task);
+
+        AddedItem addedItem = new AddedItem();
+        addedItem.setTask(task);
+        addedItem.setExternalId("spotify:track:123");
+        addedItemRepository.persist(addedItem);
+
+        // WHEN
+        boolean exists = addedItemRepository.existsByExternalIdAndTaskId("spotify:track:123", task.getId());
+
+        // THEN
+        assertEquals(true, exists);
+    }
 }
