@@ -60,6 +60,26 @@ public interface SpotifyApi {
                         @FormParam("grant_type") String grantType,
                         @FormParam("refresh_token") String refreshToken);
 
+        /**
+         * Adds items to a Spotify playlist.
+         *
+         * @param authHeader The authorization header containing the access token.
+         * @param playlistId The ID of the playlist to add items to.
+         * @param uris       A comma-separated list of Spotify URIs (tracks or episodes)
+         *                   to add. Maximum 100 URIs per request.
+         * @param position   The position to insert the items (zero-based index). If
+         *                   omitted, items will be appended.
+         * @throws Exception if the request fails.
+         */
+        @POST
+        @Path("/playlists/{playlistId}/tracks")
+        @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+        void addToPlaylist(
+                        @HeaderParam("Authorization") String authHeader,
+                        @PathParam("playlistId") String playlistId,
+                        @FormParam("uris") String uris,
+                        @FormParam("position") Integer position) throws Exception;
+
         @GET
         <T> T getNextPage(@HeaderParam("Authorization") String authHeader, Class<T> responseType);
 }
