@@ -1,6 +1,7 @@
 package com.windschief.task;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,12 @@ public class Task {
     private Instant checkFrom;
     private boolean active;
     private String userId;
+    private String externalDestinationId;
+
+    public boolean isDue() {
+        return lastTimeExecuted == null ||
+                lastTimeExecuted.plus(executionIntervalDays, ChronoUnit.DAYS).isBefore(Instant.now());
+    }
 
     public Long getId() {
         return id;
@@ -101,5 +108,13 @@ public class Task {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getExternalDestinationId() {
+        return externalDestinationId;
+    }
+
+    public void setExternalDestinationId(String externalDestinationId) {
+        this.externalDestinationId = externalDestinationId;
     }
 }
