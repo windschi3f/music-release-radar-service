@@ -45,6 +45,7 @@ public class TaskService implements TaskApi {
     }
 
     @Override
+    @Transactional
     public TaskResponseDto createTask(TaskRequestDto taskRequestDto) {
         if (taskRequestDto.refreshToken() == null) {
             throw new IllegalArgumentException("refreshToken is required");
@@ -82,6 +83,7 @@ public class TaskService implements TaskApi {
     }
 
     @Override
+    @Transactional
     public Response deleteTask(Long id) {
         long deletedCount = taskRepository.deleteByTaskIdAndUserId(id, taskAccess.getCurrentUserId());
         if (deletedCount == 0) {
