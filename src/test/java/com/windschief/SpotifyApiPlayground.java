@@ -12,7 +12,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 public class SpotifyApiPlayground {
-        private static final String ACCESS_TOKEN = "BQBx0KCUCw0G5U37L2mEcNKpCh3k3go8JKAj3gs8pGvcPVERwKE7o3CkSPu9iiQ1SpBaikHMaDhLcoWOCM25fIQKEXodZqr-s0Cm7fGa5ODLaLsqs4XkwWjrfrtpOygHf0iywPE70rn-L305pyg_yMQ1SKQ_IMKfkoHh9n-IwmydewnE0jCdX0deNlgGlGSW4K6Iydc";
+        private static final String ACCESS_TOKEN = "access_token";
         private static final String SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1";
         private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -21,6 +21,7 @@ public class SpotifyApiPlayground {
 
                 testSearch(client, "artist:Miles Davis year:1959", "track", "US", 10);
                 getArtistAlbums("0kbYTNQb4Pb1rPbbaF0pT4", client);
+                getUserPlaylists(client);
         }
 
         private static void testSearch(HttpClient client,
@@ -58,5 +59,18 @@ public class SpotifyApiPlayground {
 
                 albumsResponse.items().forEach(
                                 album -> System.out.printf("Album: %s (%s)%n", album.name(), album.release_date()));
+        }
+
+        private static void getUserPlaylists(HttpClient client) throws Exception {
+                String url = String.format("%s/me/playlists", SPOTIFY_API_BASE_URL);
+
+                HttpRequest request = HttpRequest.newBuilder()
+                                .uri(URI.create(url))
+                                .header("Authorization", "Bearer " + ACCESS_TOKEN)
+                                .GET()
+                                .build();
+
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                System.out.println(response.body());
         }
 }
