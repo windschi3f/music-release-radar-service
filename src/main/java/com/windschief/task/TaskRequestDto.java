@@ -7,6 +7,7 @@ public record TaskRequestDto(
         int executionIntervalDays,
         Instant checkFrom,
         boolean active,
+        String externalDestinationId,
         String refreshToken) {
     public static Task toTask(TaskRequestDto taskRequestDto) {
         if (taskRequestDto == null) {
@@ -17,6 +18,7 @@ public record TaskRequestDto(
         task.setExecutionIntervalDays(taskRequestDto.executionIntervalDays());
         task.setCheckFrom(taskRequestDto.checkFrom());
         task.setActive(taskRequestDto.active());
+        task.setExternalDestinationId(taskRequestDto.externalDestinationId());
         return task;
     }
 }

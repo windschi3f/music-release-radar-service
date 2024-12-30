@@ -8,7 +8,8 @@ public record TaskResponseDto(
         int executionIntervalDays,
         Instant lastTimeExecuted,
         Instant checkFrom,
-        boolean active) {
+        boolean active,
+        String externalDestinationId) {
     public static TaskResponseDto from(Task task) {
         if (task == null) {
             throw new IllegalArgumentException("Task cannot be null");
@@ -19,6 +20,7 @@ public record TaskResponseDto(
                 task.getExecutionIntervalDays(),
                 task.getLastTimeExecuted(),
                 task.getCheckFrom(),
-                task.isActive());
+                task.isActive(),
+                task.getExternalDestinationId());
     }
 }
