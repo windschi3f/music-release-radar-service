@@ -65,7 +65,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenNewRelease_whenDetectNewAlbumIds_thenDetectNewReleases() {
+    public void givenNewRelease_whenDetectNewAlbumIds_thenDetectNewReleases() throws Exception {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -106,7 +106,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenAlreadyAddedNewRelease_whenDetectNewAlbumIds_thenDetectNoNewReleases() {
+    public void givenAlreadyAddedNewRelease_whenDetectNewAlbumIds_thenDetectNoNewReleases() throws Exception {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -146,7 +146,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenReleaseBeforeLastAddedAt_whenDetectNewAlbumIds_thenDetectNoNewReleases() {
+    public void givenReleaseBeforeLastAddedAt_whenDetectNewAlbumIds_thenDetectNoNewReleases() throws Exception {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -186,7 +186,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenNullLastAddedAt_whenDetectNewAlbumIds_thenDetectNewReleases() {
+    public void givenNullLastAddedAt_whenDetectNewAlbumIds_thenDetectNewReleases() throws Exception {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -215,7 +215,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenMultiplePages_whenDetectNewAlbumIds_thenDetectNewReleases() {
+    public void givenMultiplePages_whenDetectNewAlbumIds_thenDetectNewReleases() throws Exception {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -249,7 +249,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenDifferentDatePrecisions_whenDetectNewAlbumIds_thenHandleCorrectly() {
+    public void givenDifferentDatePrecisions_whenDetectNewAlbumIds_thenHandleCorrectly() throws Exception {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -282,7 +282,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenUnknownDatePrecision_whenDetectNewAlbumIds_thenThrowException() {
+    public void givenUnknownDatePrecision_whenDetectNewAlbumIds_thenThrowException() throws Exception {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);

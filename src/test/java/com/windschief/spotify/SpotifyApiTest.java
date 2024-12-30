@@ -23,7 +23,7 @@ class SpotifyApiTest {
     }
 
     @Test
-    void givenMockedSpotifyApi_whenGetCurrentUser_thenVerifyCall() {
+    void givenMockedSpotifyApi_whenGetCurrentUser_thenVerifyCall() throws Exception {
         // GIVEN
         SpotifyUser mockUser = new SpotifyUser("id", "John Doe", "johndoe", "US", null, null, null, null, null,
                 "premium", null, null);

@@ -3,7 +3,6 @@ package com.windschief.auth;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 
 import java.time.Instant;
 import java.util.Base64;
@@ -37,13 +36,13 @@ public class SpotifyTokenValidator {
                 SpotifyUser user = spotifyApi.getCurrentUser("Bearer " + token);
                 updateStoredToken(user.id(), token, refreshToken);
                 return user;
-            } catch (WebApplicationException e) {
+            } catch (Exception e) {
                 return null;
             }
         });
     }
 
-    public String getValidTokenForUser(String userId) {
+    public String getValidTokenForUser(String userId) throws Exception {
         SpotifyToken token = tokenRepository.findByUserId(userId);
         if (token == null) {
             return null;
@@ -63,7 +62,7 @@ public class SpotifyTokenValidator {
         tokenRepository.persist(newToken);
     }
 
-    private void refreshToken(SpotifyToken token) {
+    private void refreshToken(SpotifyToken token) throws Exception {
         String basicAuth = "Basic " + Base64.getEncoder()
                 .encodeToString((spotifyConfig.clientId() + ":" + spotifyConfig.clientSecret()).getBytes());
 

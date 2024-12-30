@@ -7,9 +7,9 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.windschief.auth.SpotifyTokenValidator;
@@ -19,6 +19,7 @@ import com.windschief.spotify.model.AlbumsResponse;
 import com.windschief.task.Platform;
 import com.windschief.task.Task;
 import com.windschief.task.added_item.AddedItemRepository;
+import com.windschief.task.item.TaskItem;
 import com.windschief.task.item.TaskItemType;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -38,7 +39,7 @@ public class ReleaseDetectionService {
         this.spotifyTokenValidator = spotifyTokenValidator;
     }
 
-    public Set<String> detectNewAlbumIds(Task task) {
+    public Set<String> detectNewAlbumIds(Task task) throws Exception {
         if (task.getPlatform() != Platform.SPOTIFY) {
             throw new IllegalArgumentException("Unsupported platform: " + task.getPlatform());
         }
@@ -48,18 +49,24 @@ public class ReleaseDetectionService {
 
         final String accessToken = spotifyTokenValidator.getValidTokenForUser(task.getUserId());
         final Instant lastAddedAt = addedItemRepository.getLastAddedAt(task.getId());
+        final List<String> artistIds = task.getTaskItems().stream()
+                .map(TaskItem::getExternalReferenceId)
+                .toList();
 
-        return task.getTaskItems().stream()
-                .map(item -> item.getExternalReferenceId())
-                .map(artistId -> getAllAlbums(accessToken, artistId))
-                .flatMap(albums -> albums.stream())
-                .filter(album -> isAlbumAfterDate(album, lastAddedAt))
-                .filter(album -> !addedItemRepository.existsByExternalIdAndTaskId(album.id(), task.getId()))
-                .map(album -> album.id())
-                .collect(Collectors.toSet());
+        final Set<String> albumIds = new HashSet<>();
+        for (String artistId : artistIds) {
+            final List<AlbumItem> albums = getAllAlbums(accessToken, artistId);
+            albums.stream()
+                    .filter(album -> isAlbumAfterDate(album, lastAddedAt))
+                    .filter(album -> !addedItemRepository.existsByExternalIdAndTaskId(album.id(), task.getId()))
+                    .map(AlbumItem::id)
+                    .forEach(albumIds::add);
+        }
+
+        return albumIds;
     }
 
-    private List<AlbumItem> getAllAlbums(String accessToken, String artistId) {
+    private List<AlbumItem> getAllAlbums(String accessToken, String artistId) throws Exception {
         final List<AlbumItem> allAlbums = new ArrayList<>();
 
         AlbumsResponse response = spotifyApi.getArtistAlbums(accessToken, artistId, "album,single", 50, 0);
