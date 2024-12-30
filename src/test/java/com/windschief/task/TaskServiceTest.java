@@ -1,18 +1,22 @@
 package com.windschief.task;
 
+import java.security.Principal;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import jakarta.ws.rs.core.Response;
-
+import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.windschief.auth.SpotifyTokenService;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -23,12 +27,22 @@ import static org.mockito.Mockito.when;
 class TaskServiceTest {
     private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
+    private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
     private TaskService taskService;
 
     @BeforeEach
     public void setup() {
-        taskService = new TaskService(taskAccess, taskRepository);
+        taskService = new TaskService(taskAccess, taskRepository, spotifyTokenService);
         when(taskAccess.getCurrentUserId()).thenReturn("testUser");
+
+        final Principal principal = mock(Principal.class);
+        when(principal.getName()).thenReturn("testUser");
+
+        final SecurityIdentity securityIdentity = mock(SecurityIdentity.class);
+        when(securityIdentity.getPrincipal()).thenReturn(principal);
+        when(securityIdentity.getAttribute("spotifyToken")).thenReturn("token");
+
+        when(taskAccess.getSecurityIdentity()).thenReturn(securityIdentity);
     }
 
     @Test
@@ -98,7 +112,7 @@ class TaskServiceTest {
     @Test
     void givenValidTaskRequest_whenCreateTaskIsCalled_thenTaskIsCreated() {
         // Given
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true);
+        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "refreshToken");
 
         doAnswer(invocation -> {
             Task task = invocation.getArgument(0);
@@ -112,6 +126,21 @@ class TaskServiceTest {
         // Then
         assertNotNull(result);
         verify(taskRepository).persist(any(Task.class));
+        verify(spotifyTokenService).updateStoredToken("testUser", "token", "refreshToken");
+    }
+
+    @Test
+    void givenMissingRefreshToken_whenCreateTaskIsCalled_thenExceptionIsThrown() {
+        // GIVEN
+        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true,
+                null);
+
+        // WHEN
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> taskService.createTask(taskRequestDto));
+
+        // THEN
+        assertEquals("refreshToken is required", exception.getMessage());
     }
 
     @Test
@@ -123,7 +152,8 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
         when(taskAccess.checkAccess(existingTask)).thenReturn(Optional.empty());
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true);
+        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true,
+                "refreshToken");
 
         // When
         Response response = taskService.updateTask(taskId, taskRequestDto);
@@ -142,7 +172,8 @@ class TaskServiceTest {
         when(taskAccess.checkAccess(task)).thenReturn(
                 Optional.of(Response.status(Response.Status.NOT_FOUND).build()));
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true);
+        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true,
+                "refreshToken");
 
         // When
         Response response = taskService.updateTask(taskId, taskRequestDto);
@@ -161,7 +192,8 @@ class TaskServiceTest {
         when(taskAccess.checkAccess(existingTask)).thenReturn(
                 Optional.of(Response.status(Response.Status.UNAUTHORIZED).build()));
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true);
+        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true,
+                "refreshToken");
 
         // When
         Response response = taskService.updateTask(taskId, taskRequestDto);

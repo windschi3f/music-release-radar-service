@@ -3,6 +3,9 @@ package com.windschief.task;
 import java.util.List;
 import java.util.Optional;
 
+import com.windschief.auth.SpotifyTokenService;
+
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -13,11 +16,13 @@ public class TaskService implements TaskApi {
 
     private final TaskAccess taskAccess;
     private final TaskRepository taskRepository;
+    private final SpotifyTokenService spotifyTokenService;
 
     @Inject
-    public TaskService(TaskAccess taskAccess, TaskRepository taskRepository) {
+    public TaskService(TaskAccess taskAccess, TaskRepository taskRepository, SpotifyTokenService spotifyTokenService) {
         this.taskAccess = taskAccess;
         this.taskRepository = taskRepository;
+        this.spotifyTokenService = spotifyTokenService;
     }
 
     @Override
@@ -41,9 +46,19 @@ public class TaskService implements TaskApi {
 
     @Override
     public TaskResponseDto createTask(TaskRequestDto taskRequestDto) {
+        if (taskRequestDto.refreshToken() == null) {
+            throw new IllegalArgumentException("refreshToken is required");
+        }
+
         Task task = TaskRequestDto.toTask(taskRequestDto);
         task.setUserId(taskAccess.getCurrentUserId());
         taskRepository.persist(task);
+
+        final SecurityIdentity securityIdentity = taskAccess.getSecurityIdentity();
+        spotifyTokenService.updateStoredToken(
+                securityIdentity.getPrincipal().getName(),
+                securityIdentity.getAttribute("spotifyToken"),
+                taskRequestDto.refreshToken());
 
         return TaskResponseDto.from(task);
     }

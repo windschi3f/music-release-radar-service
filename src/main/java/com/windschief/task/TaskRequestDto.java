@@ -6,7 +6,8 @@ public record TaskRequestDto(
         Platform platform,
         int executionIntervalDays,
         Instant checkFrom,
-        boolean active) {
+        boolean active,
+        String refreshToken) {
     public static Task toTask(TaskRequestDto taskRequestDto) {
         if (taskRequestDto == null) {
             throw new IllegalArgumentException("TaskRequestDto cannot be null");

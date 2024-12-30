@@ -35,4 +35,8 @@ public class TaskAccess {
     public String getCurrentUserId() {
         return securityIdentity.getPrincipal().getName();
     }
+
+    public SecurityIdentity getSecurityIdentity() {
+        return securityIdentity;
+    }
 }

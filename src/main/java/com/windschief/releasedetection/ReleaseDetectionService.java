@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
-import com.windschief.auth.SpotifyTokenValidator;
+import com.windschief.auth.SpotifyTokenService;
 import com.windschief.spotify.SpotifyApi;
 import com.windschief.spotify.model.AlbumItem;
 import com.windschief.spotify.model.AlbumsResponse;
@@ -29,14 +29,14 @@ import jakarta.inject.Inject;
 public class ReleaseDetectionService {
     private final SpotifyApi spotifyApi;
     private final AddedItemRepository addedItemRepository;
-    private final SpotifyTokenValidator spotifyTokenValidator;
+    private final SpotifyTokenService spotifyTokenService;
 
     @Inject
     public ReleaseDetectionService(@RestClient SpotifyApi spotifyApi, AddedItemRepository addedItemRepository,
-            SpotifyTokenValidator spotifyTokenValidator) {
+            SpotifyTokenService spotifyTokenService) {
         this.spotifyApi = spotifyApi;
         this.addedItemRepository = addedItemRepository;
-        this.spotifyTokenValidator = spotifyTokenValidator;
+        this.spotifyTokenService = spotifyTokenService;
     }
 
     public Set<String> detectNewAlbumIds(Task task) throws Exception {
@@ -47,7 +47,7 @@ public class ReleaseDetectionService {
             throw new IllegalArgumentException("Unsupported task item type: PLAYLIST");
         }
 
-        final String accessToken = spotifyTokenValidator.getValidTokenForUser(task.getUserId());
+        final String accessToken = spotifyTokenService.getValidToken(task.getUserId());
         final Instant lastAddedAt = addedItemRepository.getLastAddedAt(task.getId());
         final List<String> artistIds = task.getTaskItems().stream()
                 .map(TaskItem::getExternalReferenceId)

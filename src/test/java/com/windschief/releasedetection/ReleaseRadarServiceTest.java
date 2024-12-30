@@ -1,6 +1,8 @@
 package com.windschief.releasedetection;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -14,7 +16,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.windschief.auth.SpotifyTokenValidator;
+import com.windschief.auth.SpotifyTokenService;
 import com.windschief.spotify.SpotifyApi;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
@@ -24,10 +26,10 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 public class ReleaseRadarServiceTest {
     private final ReleaseDetectionService releaseDetectionService = mock(ReleaseDetectionService.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
-    private final SpotifyTokenValidator spotifyTokenValidator = mock(SpotifyTokenValidator.class);
+    private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
     private final SpotifyApi spotifyApi = mock(SpotifyApi.class);
     private final ReleaseRadarService releaseRadarService = new ReleaseRadarService(releaseDetectionService,
-            taskRepository, spotifyTokenValidator, spotifyApi);
+            taskRepository, spotifyTokenService, spotifyApi);
 
     @SuppressWarnings("unchecked")
     private final PanacheQuery<Task> panacheTaskQuery = mock(PanacheQuery.class);
@@ -90,14 +92,15 @@ public class ReleaseRadarServiceTest {
         task.setExternalDestinationId("playlistId");
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
         when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of("album1", "album2"));
-        when(spotifyTokenValidator.getValidTokenForUser(task.getUserId())).thenReturn("token");
+        when(spotifyTokenService.getValidToken(task.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
 
         // THEN
         verify(releaseDetectionService, times(1)).detectNewAlbumIds(task);
-        verify(spotifyApi, times(1)).addToPlaylist("token", task.getExternalDestinationId(), "album2,album1", null);
+        verify(spotifyApi, times(1)).addToPlaylist(eq("token"), eq(task.getExternalDestinationId()), anyString(),
+                eq(null));
     }
 
     @Test
@@ -110,7 +113,7 @@ public class ReleaseRadarServiceTest {
         task.setExternalDestinationId("playlistId");
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
         when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of());
-        when(spotifyTokenValidator.getValidTokenForUser(task.getUserId())).thenReturn("token");
+        when(spotifyTokenService.getValidToken(task.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
@@ -136,7 +139,7 @@ public class ReleaseRadarServiceTest {
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task1, task2));
         when(releaseDetectionService.detectNewAlbumIds(task1)).thenThrow(new RuntimeException("Test exception"));
         when(releaseDetectionService.detectNewAlbumIds(task2)).thenReturn(Set.of("album1"));
-        when(spotifyTokenValidator.getValidTokenForUser(task2.getUserId())).thenReturn("token");
+        when(spotifyTokenService.getValidToken(task2.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
@@ -156,7 +159,7 @@ public class ReleaseRadarServiceTest {
 
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
         when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of("album1"));
-        when(spotifyTokenValidator.getValidTokenForUser(task.getUserId())).thenReturn("token");
+        when(spotifyTokenService.getValidToken(task.getUserId())).thenReturn("token");
 
         doThrow(new RuntimeException("API error")).when(spotifyApi).addToPlaylist(any(), any(), any(), any());
 

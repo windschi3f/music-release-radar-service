@@ -8,13 +8,14 @@ import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
-import com.windschief.auth.SpotifyTokenValidator;
+import com.windschief.auth.SpotifyTokenService;
 import com.windschief.spotify.SpotifyApi;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
 
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 public class ReleaseRadarService {
@@ -22,17 +23,18 @@ public class ReleaseRadarService {
 
     private final ReleaseDetectionService releaseDetectionService;
     private final TaskRepository taskRepository;
-    private final SpotifyTokenValidator spotifyTokenValidator;
+    private final SpotifyTokenService spotifyTokenService;
     private final SpotifyApi spotifyApi;
 
+    @Inject
     public ReleaseRadarService(
             ReleaseDetectionService releaseDetectionService,
             TaskRepository taskRepository,
-            SpotifyTokenValidator spotifyTokenValidator,
+            SpotifyTokenService spotifyTokenService,
             @RestClient SpotifyApi spotifyApi) {
         this.releaseDetectionService = releaseDetectionService;
         this.taskRepository = taskRepository;
-        this.spotifyTokenValidator = spotifyTokenValidator;
+        this.spotifyTokenService = spotifyTokenService;
         this.spotifyApi = spotifyApi;
     }
 
@@ -54,7 +56,7 @@ public class ReleaseRadarService {
                     continue;
                 }
 
-                String token = spotifyTokenValidator.getValidTokenForUser(task.getUserId());
+                String token = spotifyTokenService.getValidToken(task.getUserId());
                 addAlbumsToPlaylist(task, newAlbumIds, token);
 
                 task.setLastTimeExecuted(Instant.now());
