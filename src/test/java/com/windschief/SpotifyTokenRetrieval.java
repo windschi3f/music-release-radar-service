@@ -70,6 +70,7 @@ public class SpotifyTokenRetrieval {
         if (response.statusCode() == 200) {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(response.body());
+            System.out.println("Refresh Token: " + jsonNode.get("refresh_token").asText());
             return jsonNode.get("access_token").asText();
         } else {
             throw new RuntimeException("Failed to get access token: " + response.body());
