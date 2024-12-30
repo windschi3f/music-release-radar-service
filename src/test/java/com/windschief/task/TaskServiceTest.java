@@ -17,6 +17,7 @@ import com.windschief.auth.SpotifyTokenService;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -161,7 +162,10 @@ class TaskServiceTest {
 
         // Then
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        verify(taskRepository).persist(any(Task.class));
+        assertEquals(Platform.SPOTIFY, existingTask.getPlatform());
+        assertEquals(7, existingTask.getExecutionIntervalDays());
+        assertEquals("123", existingTask.getExternalDestinationId());
+        assertTrue(existingTask.isActive());
     }
 
     @Test

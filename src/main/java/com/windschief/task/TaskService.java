@@ -72,14 +72,10 @@ public class TaskService implements TaskApi {
         Optional<Response> accessCheck = taskAccess.checkAccess(task);
         if (accessCheck.isPresent()) {
             return accessCheck.get();
-        } else {
-            Task updateTask = TaskRequestDto.toTask(taskRequestDto);
-            updateTask.setId(id);
-            updateTask.setUserId(taskAccess.getCurrentUserId());
-            updateTask.setLastTimeExecuted(task.getLastTimeExecuted());
-            taskRepository.persist(updateTask);
-            return Response.ok(TaskResponseDto.from(updateTask)).build();
         }
+
+        TaskRequestDto.updateTask(task, taskRequestDto);
+        return Response.ok(TaskResponseDto.from(task)).build();
     }
 
     @Override

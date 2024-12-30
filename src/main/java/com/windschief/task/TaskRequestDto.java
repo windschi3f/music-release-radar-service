@@ -21,4 +21,15 @@ public record TaskRequestDto(
         task.setExternalDestinationId(taskRequestDto.externalDestinationId());
         return task;
     }
+
+    public static void updateTask(Task task, TaskRequestDto dto) {
+        if (dto == null || task == null) {
+            throw new IllegalArgumentException("Task and TaskRequestDto cannot be null");
+        }
+        task.setPlatform(dto.platform());
+        task.setExecutionIntervalDays(dto.executionIntervalDays());
+        task.setCheckFrom(dto.checkFrom());
+        task.setActive(dto.active());
+        task.setExternalDestinationId(dto.externalDestinationId());
+    }
 }
