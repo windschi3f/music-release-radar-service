@@ -60,6 +60,7 @@ public class TaskItemService implements TaskItemApi {
     }
 
     @Override
+    @Transactional
     public Response deleteTaskItem(Long taskId, Long taskItemId) {
         Task task = taskRepository.findById(taskId);
 
