@@ -1,7 +1,5 @@
 package com.windschief.task.added_item;
 
-import java.util.Optional;
-
 import com.windschief.task.Task;
 import com.windschief.task.TaskAccess;
 import com.windschief.task.TaskRepository;
@@ -29,10 +27,7 @@ public class AddedItemService implements AddedItemApi {
     public Response getAddedItems(Long taskId) {
         Task task = taskRepository.findById(taskId);
 
-        Optional<Response> accessCheck = taskAccess.checkAccess(task);
-        if (accessCheck.isPresent()) {
-            return accessCheck.get();
-        }
+        taskAccess.checkAccess(task);
 
         return Response.ok(addedItemRepository.findByTaskId(taskId).stream()
                 .map(AddedItemResponseDto::from)

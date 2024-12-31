@@ -1,20 +1,18 @@
 package com.windschief.task;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.security.Principal;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.NotFoundException;
 
 @QuarkusTest
 class TaskAccessTest {
@@ -31,96 +29,65 @@ class TaskAccessTest {
     }
 
     @Test
-    void whenTaskIsNull_thenReturnNotFound() {
+    void givenNullTask_whenCheckAccess_thenThrowNotFoundException() {
         // GIVEN
         Task task = null;
 
-        // WHEN
-        Optional<Response> result = taskAccess.checkAccess(task);
-
-        // THEN
-        assertTrue(result.isPresent());
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), result.get().getStatus());
+        // WHEN / THEN
+        assertThrows(NotFoundException.class, () -> taskAccess.checkAccess(task));
     }
 
     @Test
-    void whenTaskBelongsToUser_thenReturnEmpty() {
+    void givenTaskBelongsToUser_whenCheckAccess_thenThrowNothing() {
         // GIVEN
         Task task = new Task();
         task.setUserId("testUser");
 
-        // WHEN
-        Optional<Response> result = taskAccess.checkAccess(task);
-
-        // THEN
-        assertFalse(result.isPresent());
+        // WHEN / THEN
+        taskAccess.checkAccess(task);
     }
 
     @Test
-    void whenTaskBelongsToOtherUser_thenReturnUnauthorized() {
+    void givenTaskBelongsToAnotherUser_whenCheckAccess_thenThrowNotAuthorizedException() {
         // GIVEN
         Task task = new Task();
         task.setUserId("otherUser");
 
-        // WHEN
-        Optional<Response> result = taskAccess.checkAccess(task);
-
-        // THEN
-        assertTrue(result.isPresent());
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.get().getStatus());
+        // WHEN / THEN
+        assertThrows(NotAuthorizedException.class, () -> taskAccess.checkAccess(task));
     }
 
     @Test
-    void whenCheckingByTaskId_andTaskDoesNotExist_thenReturnNotFound() {
+    void givenNonExistingTaskId_whenCheckAccess_thenThrowNotFoundException() {
         // GIVEN
         Long taskId = 1L;
         when(taskRepository.findById(taskId)).thenReturn(null);
 
-        // WHEN
-        Optional<Response> result = taskAccess.checkAccess(taskId);
-
-        // THEN
-        assertTrue(result.isPresent());
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), result.get().getStatus());
+        // WHEN / THEN
+        assertThrows(NotFoundException.class, () -> taskAccess.checkAccess(taskId));
     }
 
     @Test
-    void whenCheckingByTaskId_andTaskBelongsToUser_thenReturnEmpty() {
+    void givenTaskIdBelongingToUser_whenCheckAccess_thenNoExceptionThrown() {
         // GIVEN
         Long taskId = 1L;
         Task task = new Task();
         task.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
 
-        // WHEN
-        Optional<Response> result = taskAccess.checkAccess(taskId);
-
-        // THEN
-        assertFalse(result.isPresent());
+        // WHEN / THEN
+        taskAccess.checkAccess(taskId);
     }
 
     @Test
-    void whenCheckingByTaskId_andTaskBelongsToOtherUser_thenReturnUnauthorized() {
+    void givenTaskIdBelongingToAnotherUser_whenCheckAccess_thenThrowNotAuthorizedException() {
         // GIVEN
         Long taskId = 1L;
         Task task = new Task();
         task.setUserId("otherUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
 
-        // WHEN
-        Optional<Response> result = taskAccess.checkAccess(taskId);
-
-        // THEN
-        assertTrue(result.isPresent());
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), result.get().getStatus());
-    }
-
-    @Test
-    void getCurrentUserIdReturnsCorrectUserId() {
-        // WHEN
-        String userId = taskAccess.getCurrentUserId();
-
-        // THEN
-        assertEquals("testUser", userId);
+        // WHEN / THEN
+        assertThrows(NotAuthorizedException.class, () -> taskAccess.checkAccess(taskId));
     }
 }

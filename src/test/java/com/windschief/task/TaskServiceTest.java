@@ -4,8 +4,9 @@ import java.security.Principal;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,71 +50,50 @@ class TaskServiceTest {
 
     @Test
     void givenExistingTasks_whenGetTasksIsCalled_thenAllUserTasksAreReturned() {
-        // Given
+        // GIVEN
         Task task1 = new Task();
         Task task2 = new Task();
         when(taskRepository.findByUserId("testUser")).thenReturn(Arrays.asList(task1, task2));
 
-        // When
+        // WHEN
         List<TaskResponseDto> result = taskService.getTasks();
 
-        // Then
+        // THEN
         assertEquals(2, result.size());
         verify(taskRepository).findByUserId("testUser");
     }
 
     @Test
     void givenExistingTask_whenGetTaskIsCalled_thenTaskIsReturned() {
-        // Given
+        // GIVEN
         Long taskId = 1L;
         Task task = new Task();
         task.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
 
-        // When
+        // WHEN
         Response response = taskService.getTask(taskId);
 
-        // Then
+        // THEN
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     }
 
     @Test
-    void givenNonExistentTask_whenGetTaskIsCalled_thenResponseIsNotFound() {
-        // Given
-        Long taskId = 1L;
-        Task task = null;
-        when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(
-                Optional.of(Response.status(Response.Status.NOT_FOUND).build()));
-
-        // When
-        Response response = taskService.getTask(taskId);
-
-        // Then
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-    }
-
-    @Test
-    void givenTaskOwnedByDifferentUser_whenGetTaskIsCalled_thenResponseIsUnauthorized() {
-        // Given
+    void givenTaskAccessException_whenGetTaskIsCalled_thenThrowException() {
+        // GIVEN
         Long taskId = 1L;
         Task task = new Task();
         task.setUserId("otherUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(
-                Optional.of(Response.status(Response.Status.UNAUTHORIZED).build()));
+        doThrow(new NotAuthorizedException("Thrown on purpose")).when(taskAccess).checkAccess(task);
 
-        // When
-        Response response = taskService.getTask(taskId);
-
-        // Then
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        // WHEN / THEN
+        assertThrows(NotAuthorizedException.class, () -> taskService.getTask(taskId));
     }
 
     @Test
     void givenValidTaskRequest_whenCreateTaskIsCalled_thenTaskIsCreated() {
-        // Given
+        // GIVEN
         TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 "refreshToken");
 
@@ -122,10 +103,10 @@ class TaskServiceTest {
             return null;
         }).when(taskRepository).persist(any(Task.class));
 
-        // When
+        // WHEN
         TaskResponseDto result = taskService.createTask(taskRequestDto);
 
-        // Then
+        // THEN
         assertNotNull(result);
         verify(taskRepository).persist(any(Task.class));
         verify(spotifyTokenService).updateStoredToken("testUser", "token", "refreshToken");
@@ -147,20 +128,19 @@ class TaskServiceTest {
 
     @Test
     void givenExistingTask_whenUpdateTaskIsCalled_thenTaskIsUpdated() {
-        // Given
+        // GIVEN
         Long taskId = 1L;
         Task existingTask = new Task();
         existingTask.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
-        when(taskAccess.checkAccess(existingTask)).thenReturn(Optional.empty());
 
         TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 "refreshToken");
 
-        // When
+        // WHEN
         Response response = taskService.updateTask(taskId, taskRequestDto);
 
-        // Then
+        // THEN
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(Platform.SPOTIFY, existingTask.getPlatform());
         assertEquals(7, existingTask.getExecutionIntervalDays());
@@ -169,73 +149,47 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenNonExistentTask_whenUpdateTaskIsCalled_thenResponseIsNotFound() {
-        // Given
+    void givenTaskAccessException_whenUpdateTaskIsCalled_thenThrowException() {
+        // GIVEN
         Long taskId = 1L;
         Task task = null;
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(
-                Optional.of(Response.status(Response.Status.NOT_FOUND).build()));
+        doThrow(new NotFoundException()).when(taskAccess).checkAccess(task);
 
         TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 "refreshToken");
 
-        // When
-        Response response = taskService.updateTask(taskId, taskRequestDto);
-
-        // Then
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-    }
-
-    @Test
-    void givenTaskOwnedByDifferentUser_whenUpdateTaskIsCalled_thenResponseIsUnauthorized() {
-        // Given
-        Long taskId = 1L;
-        Task existingTask = new Task();
-        existingTask.setUserId("otherUser");
-        when(taskRepository.findById(taskId)).thenReturn(existingTask);
-        when(taskAccess.checkAccess(existingTask)).thenReturn(
-                Optional.of(Response.status(Response.Status.UNAUTHORIZED).build()));
-
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "123",
-                "refreshToken");
-
-        // When
-        Response response = taskService.updateTask(taskId, taskRequestDto);
-
-        // Then
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        // WHEN / THEN
+        assertThrows(NotFoundException.class, () -> taskService.updateTask(taskId, taskRequestDto));
     }
 
     @Test
     void givenExistingTask_whenDeleteTaskIsCalled_thenTaskIsDeletedAndResponseIsNoContent() {
-        // Given
+        // GIVEN
         Long taskId = 1L;
         Task task = new Task();
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
         when(taskRepository.deleteByTaskIdAndUserId(taskId, "testUser")).thenReturn(1L);
 
-        // When
+        // WHEN
         Response response = taskService.deleteTask(taskId);
 
-        // Then
+        // THEN
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 
     @Test
     void givenNonExistentTask_whenDeleteTaskIsCalled_thenResponseIsNotFound() {
-        // Given
+        // GIVEN
         Long taskId = 1L;
         Task task = new Task();
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
         when(taskRepository.deleteByTaskIdAndUserId(taskId, "testUser")).thenReturn(0L);
 
-        // When
+        // WHEN
         Response response = taskService.deleteTask(taskId);
 
-        // Then
+        // THEN
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 }

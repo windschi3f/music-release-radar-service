@@ -2,7 +2,8 @@ package com.windschief.task;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 
 import com.windschief.task.item.TaskItem;
@@ -16,7 +17,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,20 +39,19 @@ class TaskItemServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void givenExistingTaskItems_whenGetTaskItemsIsCalled_thenAllTaskItemsAreReturned() {
-        // Given
+        // GIVEN
         Long taskId = 1L;
         Task task = new Task();
         TaskItem item1 = new TaskItem();
         TaskItem item2 = new TaskItem();
 
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
         when(taskItemRepository.findByTaskId(taskId)).thenReturn(Arrays.asList(item1, item2));
 
-        // When
+        // WHEN
         Response result = taskItemService.getTaskItems(taskId);
 
-        // Then
+        // THEN
         assertEquals(Response.Status.OK.getStatusCode(), result.getStatus());
         List<TaskItemResponseDto> taskItems = (List<TaskItemResponseDto>) result.getEntity();
         assertEquals(2, taskItems.size());
@@ -58,93 +60,69 @@ class TaskItemServiceTest {
 
     @Test
     void givenValidTaskAndTaskItems_whenCreateTaskItemsIsCalled_thenTaskItemsAreCreatedAndResponseIsCreated() {
-        // Given
+        // GIVEN
         Long taskId = 1L;
         Task task = new Task();
         task.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
 
         TaskItemRequestDto dto1 = new TaskItemRequestDto(TaskItemType.PLAYLIST, "1");
         TaskItemRequestDto dto2 = new TaskItemRequestDto(TaskItemType.PLAYLIST, "2");
         List<TaskItemRequestDto> dtos = Arrays.asList(dto1, dto2);
 
-        // When
+        // WHEN
         Response response = taskItemService.createTaskItems(taskId, dtos);
 
-        // Then
+        // THEN
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
         verify(taskItemRepository).persist(anyList());
     }
 
     @Test
-    void givenNonExistentTask_whenCreateTaskItemsIsCalled_thenResponseIsNotFound() {
-        // Given
+    void givenTaskAccessException_whenCreateTaskItemsIsCalled_thenThrowException() {
+        // GIVEN
         Long taskId = 1L;
         Task task = null;
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(
-                Optional.of(Response.status(Response.Status.NOT_FOUND).build()));
+        doThrow(new NotFoundException()).when(taskAccess).checkAccess(task);
 
-        // When
-        Response response = taskItemService.createTaskItems(taskId, List.of());
-
-        // Then
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
-    }
-
-    @Test
-    void givenTaskOwnedByDifferentUser_whenCreateTaskItemsIsCalled_thenResponseIsUnauthorized() {
-        // Given
-        Long taskId = 1L;
-        Task task = new Task();
-        task.setUserId("otherUser");
-        when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(
-                Optional.of(Response.status(Response.Status.UNAUTHORIZED).build()));
-
-        // When
-        Response response = taskItemService.createTaskItems(taskId, List.of());
-
-        // Then
-        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        // WHEN / THEN
+        assertThrows(NotFoundException.class, () -> taskItemService.createTaskItems(taskId, List.of()));
     }
 
     @Test
     void givenExistingTaskItem_whenDeleteTaskItemIsCalled_thenTaskItemIsDeletedAndResponseIsNoContent() {
-        // Given
+        // GIVEN
         Long taskId = 1L;
         Long taskItemId = 2L;
         Task task = new Task();
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
         when(taskAccess.getCurrentUserId()).thenReturn("testUser");
         when(taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId, taskAccess.getCurrentUserId()))
                 .thenReturn(1L);
 
-        // When
+        // WHEN
         Response response = taskItemService.deleteTaskItem(taskId, taskItemId);
 
-        // Then
+        // THEN
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 
     @Test
     void givenNonExistentTaskItem_whenDeleteTaskItemIsCalled_thenResponseIsNotFound() {
-        // Given
+        // GIVEN
         Long taskId = 1L;
         Long taskItemId = 2L;
         Task task = new Task();
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskAccess.checkAccess(task)).thenReturn(Optional.empty());
         when(taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId, taskAccess.getCurrentUserId()))
                 .thenReturn(0L);
         when(taskAccess.getCurrentUserId()).thenReturn("testUser");
 
-        // When
+        // WHEN
         Response response = taskItemService.deleteTaskItem(taskId, taskItemId);
 
-        // Then
+        // THEN
         assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 }

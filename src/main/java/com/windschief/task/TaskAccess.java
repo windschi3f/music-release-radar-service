@@ -1,11 +1,10 @@
 package com.windschief.task;
 
-import java.util.Optional;
-
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.NotFoundException;
 
 @RequestScoped
 public class TaskAccess {
@@ -18,18 +17,17 @@ public class TaskAccess {
         this.taskRepository = taskRepository;
     }
 
-    public Optional<Response> checkAccess(Task task) {
+    public void checkAccess(Task task) {
         if (task == null) {
-            return Optional.of(Response.status(Response.Status.NOT_FOUND).build());
-        } else if (!task.getUserId().equals(securityIdentity.getPrincipal().getName())) {
-            return Optional.of(Response.status(Response.Status.UNAUTHORIZED).build());
-        } else {
-            return Optional.empty();
+            throw new NotFoundException("Task not found");
+        }
+        if (!task.getUserId().equals(securityIdentity.getPrincipal().getName())) {
+            throw new NotAuthorizedException("You are not authorized to access this task");
         }
     }
 
-    public Optional<Response> checkAccess(Long taskId) {
-        return checkAccess(taskRepository.findById(taskId));
+    public void checkAccess(Long taskId) {
+        checkAccess(taskRepository.findById(taskId));
     }
 
     public String getCurrentUserId() {

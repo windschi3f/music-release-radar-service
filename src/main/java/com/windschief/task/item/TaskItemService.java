@@ -1,7 +1,6 @@
 package com.windschief.task.item;
 
 import java.util.List;
-import java.util.Optional;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -28,10 +27,8 @@ public class TaskItemService implements TaskItemApi {
     @Override
     public Response getTaskItems(Long taskId) {
         Task task = taskRepository.findById(taskId);
-        Optional<Response> accessCheck = taskAccess.checkAccess(task);
-        if (accessCheck.isPresent()) {
-            return accessCheck.get();
-        }
+
+        taskAccess.checkAccess(task);
 
         return Response.ok(taskItemRepository.findByTaskId(taskId).stream()
                 .map(TaskItemResponseDto::from)
@@ -43,10 +40,8 @@ public class TaskItemService implements TaskItemApi {
     @Transactional
     public Response createTaskItems(Long taskId, List<TaskItemRequestDto> taskItemRequestDtos) {
         Task task = taskRepository.findById(taskId);
-        Optional<Response> accessCheck = taskAccess.checkAccess(task);
-        if (accessCheck.isPresent()) {
-            return accessCheck.get();
-        }
+
+        taskAccess.checkAccess(task);
 
         List<TaskItem> taskItems = taskItemRequestDtos.stream()
                 .map(dto -> {
@@ -67,10 +62,8 @@ public class TaskItemService implements TaskItemApi {
     @Override
     public Response deleteTaskItem(Long taskId, Long taskItemId) {
         Task task = taskRepository.findById(taskId);
-        Optional<Response> accessCheck = taskAccess.checkAccess(task);
-        if (accessCheck.isPresent()) {
-            return accessCheck.get();
-        }
+
+        taskAccess.checkAccess(task);
 
         long deletedCount = taskItemRepository.deleteByTaskIdAndTaskItemIdAndUserId(taskId, taskItemId,
                 taskAccess.getCurrentUserId());

@@ -1,7 +1,6 @@
 package com.windschief.task;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.windschief.auth.SpotifyTokenService;
 
@@ -36,12 +35,9 @@ public class TaskService implements TaskApi {
     public Response getTask(Long id) {
         Task task = taskRepository.findById(id);
 
-        Optional<Response> accessCheck = taskAccess.checkAccess(task);
-        if (accessCheck.isPresent()) {
-            return accessCheck.get();
-        } else {
-            return Response.ok(TaskResponseDto.from(task)).build();
-        }
+        taskAccess.checkAccess(task);
+
+        return Response.ok(TaskResponseDto.from(task)).build();
     }
 
     @Override
@@ -69,10 +65,7 @@ public class TaskService implements TaskApi {
     public Response updateTask(Long id, TaskRequestDto taskRequestDto) {
         Task task = taskRepository.findById(id);
 
-        Optional<Response> accessCheck = taskAccess.checkAccess(task);
-        if (accessCheck.isPresent()) {
-            return accessCheck.get();
-        }
+        taskAccess.checkAccess(task);
 
         TaskRequestDto.updateTask(task, taskRequestDto);
         return Response.ok(TaskResponseDto.from(task)).build();
