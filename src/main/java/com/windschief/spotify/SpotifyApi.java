@@ -18,6 +18,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/v1")
@@ -28,22 +29,22 @@ public interface SpotifyApi {
          *
          * @param authHeader The authorization header containing the access token.
          * @return The user's Spotify profile information.
-         * @throws Exception if the request fails.
+         * @throws WebApplicationException if the request fails.
          */
         @GET
         @Path("/me")
-        SpotifyUser getCurrentUser(@HeaderParam("Authorization") String authHeader) throws Exception;
+        SpotifyUser getCurrentUser(@HeaderParam("Authorization") String authHeader) throws WebApplicationException;
 
         /**
          * Get the artists that the current user follows.
          *
          * @param authHeader The authorization header containing the access token.
          * @return Information about the artists the user follows.
-         * @throws Exception if the request fails.
+         * @throws WebApplicationException if the request fails.
          */
         @GET
         @Path("/me/following")
-        FollowingResponse getFollowing(@HeaderParam("Authorization") String authHeader) throws Exception;
+        FollowingResponse getFollowing(@HeaderParam("Authorization") String authHeader) throws WebApplicationException;
 
         /**
          * Get an artist's albums.
@@ -57,7 +58,7 @@ public interface SpotifyApi {
          *                      Minimum: 1. Maximum: 50.
          * @param offset        The index of the first item to return. Default: 0.
          * @return The artist's albums.
-         * @throws Exception if the request fails.
+         * @throws WebApplicationException if the request fails.
          */
         @GET
         @Path("/artists/{id}/albums")
@@ -66,7 +67,7 @@ public interface SpotifyApi {
                         @PathParam("id") String artistId,
                         @QueryParam("include_groups") String includeGroups,
                         @QueryParam("limit") int limit,
-                        @QueryParam("offset") int offset) throws Exception;
+                        @QueryParam("offset") int offset) throws WebApplicationException;
 
         /**
          * Search for Spotify items.
@@ -82,7 +83,7 @@ public interface SpotifyApi {
          * @param includeExternal If 'audio' is specified, audio features will be
          *                        included.
          * @return Search results.
-         * @throws Exception if the request fails.
+         * @throws WebApplicationException if the request fails.
          */
         @GET
         @Path("/search")
@@ -93,7 +94,7 @@ public interface SpotifyApi {
                         @QueryParam("market") String market,
                         @QueryParam("limit") int limit,
                         @QueryParam("offset") int offset,
-                        @QueryParam("include_external") String includeExternal) throws Exception;
+                        @QueryParam("include_external") String includeExternal) throws WebApplicationException;
 
         /**
          * Refresh an access token.
@@ -103,7 +104,7 @@ public interface SpotifyApi {
          * @param refreshToken The refresh token returned from the authorization code
          *                     exchange.
          * @return A new access token.
-         * @throws Exception if the request fails.
+         * @throws WebApplicationException if the request fails.
          */
         @POST
         @Path("/api/token")
@@ -112,7 +113,7 @@ public interface SpotifyApi {
         TokenResponse refreshToken(
                         @HeaderParam("Authorization") String basicAuth,
                         @FormParam("grant_type") String grantType,
-                        @FormParam("refresh_token") String refreshToken) throws Exception;
+                        @FormParam("refresh_token") String refreshToken) throws WebApplicationException;
 
         /**
          * Adds items to a Spotify playlist.
@@ -123,7 +124,7 @@ public interface SpotifyApi {
          *                   to add. Maximum 100 URIs per request.
          * @param position   The position to insert the items (zero-based index).
          *                   If omitted, items will be appended.
-         * @throws Exception if the request fails.
+         * @throws WebApplicationException if the request fails.
          */
         @POST
         @Path("/playlists/{playlistId}/tracks")
@@ -132,7 +133,7 @@ public interface SpotifyApi {
                         @HeaderParam("Authorization") String authHeader,
                         @PathParam("playlistId") String playlistId,
                         @FormParam("uris") String uris,
-                        @FormParam("position") Integer position) throws Exception;
+                        @FormParam("position") Integer position) throws WebApplicationException;
 
         /**
          * Get the next page of a paginated response.
@@ -140,7 +141,7 @@ public interface SpotifyApi {
          * @param authHeader   The authorization header containing the access token.
          * @param responseType The class type of the expected response.
          * @return The next page of results.
-         * @throws Exception if the request fails.
+         * @throws WebApplicationException if the request fails.
          */
         @GET
         <T> T getNextPage(@HeaderParam("Authorization") String authHeader, Class<T> responseType);

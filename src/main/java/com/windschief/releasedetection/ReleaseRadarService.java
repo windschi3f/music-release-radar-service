@@ -17,6 +17,7 @@ import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
 
 public class ReleaseRadarService {
     private static final int CHUNK_SIZE = 100;
@@ -61,7 +62,7 @@ public class ReleaseRadarService {
 
                 task.setLastTimeExecuted(Instant.now());
                 taskRepository.persist(task);
-            } catch (Exception e) {
+            } catch (WebApplicationException e) {
                 Log.error(String.format("Failed to process task [taskId=%s, userId=%s, playlistId=%s]",
                         task.getId(), task.getUserId(), task.getExternalDestinationId()), e);
             }
@@ -71,7 +72,7 @@ public class ReleaseRadarService {
                 Duration.between(startTime, Instant.now()), tasks.size()));
     }
 
-    private void addAlbumsToPlaylist(Task task, Set<String> newAlbumIds, String token) throws Exception {
+    private void addAlbumsToPlaylist(Task task, Set<String> newAlbumIds, String token) throws WebApplicationException {
         for (int i = 0; i < newAlbumIds.size(); i += CHUNK_SIZE) {
             final String idsChunk = newAlbumIds.stream()
                     .skip(i)

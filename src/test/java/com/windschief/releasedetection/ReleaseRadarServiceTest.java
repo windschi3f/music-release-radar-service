@@ -22,6 +22,7 @@ import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import jakarta.ws.rs.WebApplicationException;
 
 public class ReleaseRadarServiceTest {
     private final ReleaseDetectionService releaseDetectionService = mock(ReleaseDetectionService.class);
@@ -40,7 +41,7 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenNoTasks_whenAddNewReleases_thenNoAlbumsAreAdded() throws Exception {
+    public void givenNoTasks_whenAddNewReleases_thenNoAlbumsAreAdded() throws WebApplicationException {
         // GIVEN
         when(panacheTaskQuery.stream()).thenReturn(Stream.of());
 
@@ -52,7 +53,7 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenInactiveTask_whenAddNewReleases_thenNoAlbumsAreAdded() throws Exception {
+    public void givenInactiveTask_whenAddNewReleases_thenNoAlbumsAreAdded() throws WebApplicationException {
         // GIVEN
         Task task = new Task();
         task.setActive(false);
@@ -67,7 +68,7 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenTaskNotDue_whenAddNewReleases_thenNoAlbumsAreAdded() throws Exception {
+    public void givenTaskNotDue_whenAddNewReleases_thenNoAlbumsAreAdded() throws WebApplicationException {
         // GIVEN
         Task task = new Task();
         task.setActive(true);
@@ -83,7 +84,7 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenTaskDue_whenAddNewReleases_thenAlbumsAreAdded() throws Exception {
+    public void givenTaskDue_whenAddNewReleases_thenAlbumsAreAdded() throws WebApplicationException {
         // GIVEN
         Task task = new Task();
         task.setActive(true);
@@ -104,7 +105,8 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenTaskDueWithoutNewReleases_whenAddNewReleases_thenNoAlbumsAreAdded() throws Exception {
+    public void givenTaskDueWithoutNewReleases_whenAddNewReleases_thenNoAlbumsAreAdded()
+            throws WebApplicationException {
         // GIVEN
         Task task = new Task();
         task.setActive(true);
@@ -124,7 +126,8 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenTaskThrowsException_whenAddNewReleases_thenOtherTasksAreStillProcessed() throws Exception {
+    public void givenTaskThrowsException_whenAddNewReleases_thenOtherTasksAreStillProcessed()
+            throws WebApplicationException {
         // GIVEN
         Task task1 = new Task();
         task1.setActive(true);
@@ -137,7 +140,7 @@ public class ReleaseRadarServiceTest {
         task2.setLastTimeExecuted(Instant.now().minusSeconds(60 * 60 * 24));
 
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task1, task2));
-        when(releaseDetectionService.detectNewAlbumIds(task1)).thenThrow(new RuntimeException("Test exception"));
+        when(releaseDetectionService.detectNewAlbumIds(task1)).thenThrow(new WebApplicationException("Test exception"));
         when(releaseDetectionService.detectNewAlbumIds(task2)).thenReturn(Set.of("album1"));
         when(spotifyTokenService.getValidToken(task2.getUserId())).thenReturn("token");
 
@@ -149,7 +152,7 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenSpotifyApiThrowsException_whenAddNewReleases_thenErrorIsHandled() throws Exception {
+    public void givenSpotifyApiThrowsException_whenAddNewReleases_thenErrorIsHandled() throws WebApplicationException {
         // GIVEN
         Task task = new Task();
         task.setActive(true);
@@ -161,7 +164,8 @@ public class ReleaseRadarServiceTest {
         when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of("album1"));
         when(spotifyTokenService.getValidToken(task.getUserId())).thenReturn("token");
 
-        doThrow(new RuntimeException("API error")).when(spotifyApi).addToPlaylist(any(), any(), any(), any());
+        doThrow(new WebApplicationException("Test exception")).when(spotifyApi).addToPlaylist(any(), any(), any(),
+                any());
 
         // WHEN
         releaseRadarService.addNewReleases();

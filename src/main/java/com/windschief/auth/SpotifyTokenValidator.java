@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
@@ -24,7 +25,7 @@ public class SpotifyTokenValidator {
         return Uni.createFrom().item(() -> {
             try {
                 return spotifyApi.getCurrentUser("Bearer " + token);
-            } catch (Exception e) {
+            } catch (WebApplicationException e) {
                 return null;
             }
         }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());

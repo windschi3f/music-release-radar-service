@@ -11,6 +11,7 @@ import com.windschief.spotify.model.TokenResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
 
 @ApplicationScoped
 public class SpotifyTokenService {
@@ -27,7 +28,7 @@ public class SpotifyTokenService {
     }
 
     @Transactional
-    public String getValidToken(String userId) throws Exception {
+    public String getValidToken(String userId) throws WebApplicationException {
         SpotifyToken token = tokenRepository.findByUserId(userId);
         if (token == null) {
             return null;
@@ -49,7 +50,7 @@ public class SpotifyTokenService {
     }
 
     @Transactional
-    void refreshToken(SpotifyToken token) throws Exception {
+    void refreshToken(SpotifyToken token) throws WebApplicationException {
         String basicAuth = "Basic " + Base64.getEncoder()
                 .encodeToString((spotifyConfig.clientId() + ":" + spotifyConfig.clientSecret()).getBytes());
 

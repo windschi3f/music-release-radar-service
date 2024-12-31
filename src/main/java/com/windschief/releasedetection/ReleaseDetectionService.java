@@ -24,6 +24,7 @@ import com.windschief.task.item.TaskItemType;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 @ApplicationScoped
 public class ReleaseDetectionService {
@@ -39,7 +40,7 @@ public class ReleaseDetectionService {
         this.spotifyTokenService = spotifyTokenService;
     }
 
-    public Set<String> detectNewAlbumIds(Task task) throws Exception {
+    public Set<String> detectNewAlbumIds(Task task) throws WebApplicationException {
         if (task.getPlatform() != Platform.SPOTIFY) {
             throw new IllegalArgumentException("Unsupported platform: " + task.getPlatform());
         }
@@ -66,7 +67,7 @@ public class ReleaseDetectionService {
         return albumIds;
     }
 
-    private List<AlbumItem> getAllAlbums(String accessToken, String artistId) throws Exception {
+    private List<AlbumItem> getAllAlbums(String accessToken, String artistId) throws WebApplicationException {
         final List<AlbumItem> allAlbums = new ArrayList<>();
 
         AlbumsResponse response = spotifyApi.getArtistAlbums(accessToken, artistId, "album,single", 50, 0);

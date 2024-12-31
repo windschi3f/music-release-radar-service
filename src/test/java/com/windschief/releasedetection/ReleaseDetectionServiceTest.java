@@ -23,6 +23,8 @@ import com.windschief.task.added_item.AddedItemRepository;
 import com.windschief.task.item.TaskItem;
 import com.windschief.task.item.TaskItemType;
 
+import jakarta.ws.rs.WebApplicationException;
+
 public class ReleaseDetectionServiceTest {
 
     private final SpotifyApi spotifyApi = mock(SpotifyApi.class);
@@ -65,7 +67,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenNewRelease_whenDetectNewAlbumIds_thenDetectNewReleases() throws Exception {
+    public void givenNewRelease_whenDetectNewAlbumIds_thenDetectNewReleases() throws WebApplicationException {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -106,7 +108,8 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenAlreadyAddedNewRelease_whenDetectNewAlbumIds_thenDetectNoNewReleases() throws Exception {
+    public void givenAlreadyAddedNewRelease_whenDetectNewAlbumIds_thenDetectNoNewReleases()
+            throws WebApplicationException {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -146,7 +149,8 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenReleaseBeforeLastAddedAt_whenDetectNewAlbumIds_thenDetectNoNewReleases() throws Exception {
+    public void givenReleaseBeforeLastAddedAt_whenDetectNewAlbumIds_thenDetectNoNewReleases()
+            throws WebApplicationException {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -186,7 +190,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenNullLastAddedAt_whenDetectNewAlbumIds_thenDetectNewReleases() throws Exception {
+    public void givenNullLastAddedAt_whenDetectNewAlbumIds_thenDetectNewReleases() throws WebApplicationException {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -215,7 +219,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenMultiplePages_whenDetectNewAlbumIds_thenDetectNewReleases() throws Exception {
+    public void givenMultiplePages_whenDetectNewAlbumIds_thenDetectNewReleases() throws WebApplicationException {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -249,7 +253,8 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenDifferentDatePrecisions_whenDetectNewAlbumIds_thenHandleCorrectly() throws Exception {
+    public void givenDifferentDatePrecisions_whenDetectNewAlbumIds_thenHandleCorrectly()
+            throws WebApplicationException {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -282,7 +287,7 @@ public class ReleaseDetectionServiceTest {
     }
 
     @Test
-    public void givenUnknownDatePrecision_whenDetectNewAlbumIds_thenThrowException() throws Exception {
+    public void givenUnknownDatePrecision_whenDetectNewAlbumIds_thenThrowException() throws WebApplicationException {
         // GIVEN
         Task task = mock(Task.class);
         when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
