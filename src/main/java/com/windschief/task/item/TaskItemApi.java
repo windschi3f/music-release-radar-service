@@ -48,7 +48,7 @@ public interface TaskItemApi {
         @Authenticated
         Response createTaskItems(
                         @Parameter(description = "ID of the task", required = true) @PathParam("taskId") Long taskId,
-                        @Parameter(description = "Task items to be created", required = true, schema = @Schema(implementation = TaskRequestDto.class, type = SchemaType.ARRAY)) List<TaskItemRequestDto> taskItemRequestDtos);
+                        @Parameter(description = "Task items to be created", required = true, schema = @Schema(implementation = TaskItemRequestDto.class, type = SchemaType.ARRAY)) List<TaskItemRequestDto> taskItemRequestDtos);
 
         @DELETE
         @Path("/{taskItemId}")
