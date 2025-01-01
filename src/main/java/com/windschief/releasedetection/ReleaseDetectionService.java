@@ -26,6 +26,7 @@ import com.windschief.task.item.TaskItemType;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 
 @ApplicationScoped
@@ -44,6 +45,7 @@ public class ReleaseDetectionService {
         this.httpClientService = httpClientService;
     }
 
+    @Transactional
     public Set<String> detectNewAlbumIds(Task task) throws WebApplicationException, IOException, InterruptedException {
         if (task.getPlatform() != Platform.SPOTIFY) {
             throw new IllegalArgumentException("Unsupported platform: " + task.getPlatform());
