@@ -34,10 +34,10 @@ public class SpotifyTokenService {
             return null;
         }
 
-        if (token.expiresAt().isBefore(Instant.now()) && token.refreshToken() != null) {
+        if (token.getExpiresAt().isBefore(Instant.now()) && token.getRefreshToken() != null) {
             refreshToken(token);
         }
-        return token.accessToken();
+        return token.getAccessToken();
     }
 
     @Transactional
@@ -57,7 +57,7 @@ public class SpotifyTokenService {
         TokenResponse response = spotifyApi.refreshToken(
                 basicAuth,
                 "refresh_token",
-                token.refreshToken());
+                token.getRefreshToken());
 
         SpotifyToken newToken = token.withNewAccessToken(
                 response.access_token(),
