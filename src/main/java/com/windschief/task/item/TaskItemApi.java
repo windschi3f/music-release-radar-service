@@ -12,8 +12,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import com.windschief.task.TaskRequestDto;
-
 import io.quarkus.security.Authenticated;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
@@ -29,7 +27,6 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Task Item Management", description = "Operations for managing tasks")
 public interface TaskItemApi {
-
         @GET
         @Operation(summary = "Get all task items")
         @APIResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskItemResponseDto.class, type = SchemaType.ARRAY)))
