@@ -58,12 +58,7 @@ public class ReleaseRadarService {
     }
 
     @Transactional
-    public void execute(Long taskId) {
-        Task task = taskRepository.findById(taskId);
-        execute(task);
-    }
-
-    private void execute(Task task) {
+    public void execute(Task task) {
         try {
             Set<String> newAlbumIds = releaseDetectionService.detectNewAlbumIds(task);
             if (newAlbumIds.isEmpty()) {

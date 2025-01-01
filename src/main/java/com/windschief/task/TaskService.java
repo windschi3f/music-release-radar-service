@@ -51,7 +51,7 @@ public class TaskService implements TaskApi {
         taskAccess.checkAccess(task);
 
         task.getTaskItems().size();
-        CompletableFuture.runAsync(() -> releaseRadarService.execute(id));
+        CompletableFuture.runAsync(() -> releaseRadarService.execute(task));
 
         return Response.accepted().build();
     }
