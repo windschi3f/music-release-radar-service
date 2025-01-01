@@ -98,7 +98,7 @@ public class ReleaseRadarServiceTest {
         task.setExternalDestinationId("playlistId");
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
         when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of("album1", "album2"));
-        when(spotifyTokenService.getValidToken(task.getUserId())).thenReturn("token");
+        when(spotifyTokenService.getValidBearerAccessToken(task.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
@@ -120,7 +120,7 @@ public class ReleaseRadarServiceTest {
         task.setExternalDestinationId("playlistId");
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
         when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of());
-        when(spotifyTokenService.getValidToken(task.getUserId())).thenReturn("token");
+        when(spotifyTokenService.getValidBearerAccessToken(task.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
@@ -147,7 +147,7 @@ public class ReleaseRadarServiceTest {
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task1, task2));
         when(releaseDetectionService.detectNewAlbumIds(task1)).thenThrow(new WebApplicationException("Test exception"));
         when(releaseDetectionService.detectNewAlbumIds(task2)).thenReturn(Set.of("album1"));
-        when(spotifyTokenService.getValidToken(task2.getUserId())).thenReturn("token");
+        when(spotifyTokenService.getValidBearerAccessToken(task2.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
@@ -168,7 +168,7 @@ public class ReleaseRadarServiceTest {
 
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
         when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of("album1"));
-        when(spotifyTokenService.getValidToken(task.getUserId())).thenReturn("token");
+        when(spotifyTokenService.getValidBearerAccessToken(task.getUserId())).thenReturn("token");
 
         doThrow(new WebApplicationException("Test exception")).when(spotifyApi).addToPlaylist(any(), any(), any(),
                 any());

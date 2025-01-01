@@ -28,7 +28,7 @@ public class SpotifyTokenService {
     }
 
     @Transactional
-    public String getValidToken(String userId) throws WebApplicationException {
+    public String getValidBearerAccessToken(String userId) throws WebApplicationException {
         SpotifyToken token = tokenRepository.findByUserId(userId);
         if (token == null) {
             return null;
@@ -37,7 +37,7 @@ public class SpotifyTokenService {
         if (token.getExpiresAt().isBefore(Instant.now()) && token.getRefreshToken() != null) {
             refreshToken(token);
         }
-        return token.getAccessToken();
+        return "Bearer " + token.getAccessToken();
     }
 
     @Transactional

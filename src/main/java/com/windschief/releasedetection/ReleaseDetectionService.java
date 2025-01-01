@@ -52,7 +52,7 @@ public class ReleaseDetectionService {
             throw new IllegalArgumentException("Unsupported task item type: PLAYLIST");
         }
 
-        final String accessToken = spotifyTokenService.getValidToken(task.getUserId());
+        final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
         final Instant lastAddedAt = addedItemRepository.getLastAddedAt(task.getId());
         final List<String> artistIds = task.getTaskItems().stream()
                 .map(TaskItem::getExternalReferenceId)
@@ -60,7 +60,7 @@ public class ReleaseDetectionService {
 
         final Set<String> albumIds = new HashSet<>();
         for (String artistId : artistIds) {
-            final List<AlbumItem> albums = getAllAlbums(accessToken, artistId);
+            final List<AlbumItem> albums = getAllAlbums(bearerToken, artistId);
             albums.stream()
                     .filter(album -> isAlbumAfterDate(album, lastAddedAt))
                     .filter(album -> !addedItemRepository.existsByExternalIdAndTaskId(album.id(), task.getId()))
@@ -71,18 +71,18 @@ public class ReleaseDetectionService {
         return albumIds;
     }
 
-    private List<AlbumItem> getAllAlbums(String accessToken, String artistId)
+    private List<AlbumItem> getAllAlbums(String bearerToken, String artistId)
             throws WebApplicationException, IOException, InterruptedException {
         final List<AlbumItem> allAlbums = new ArrayList<>();
 
-        AlbumsResponse response = spotifyApi.getArtistAlbums(accessToken, artistId, "album,single", 50, 0);
+        AlbumsResponse response = spotifyApi.getArtistAlbums(bearerToken, artistId, "album,single", 50, 0);
         while (true) {
             allAlbums.addAll(response.items());
             if (response.next() == null) {
                 break;
             }
 
-            response = httpClientService.get(response.next(), accessToken, AlbumsResponse.class);
+            response = httpClientService.get(response.next(), bearerToken, AlbumsResponse.class);
         }
 
         return allAlbums;

@@ -83,7 +83,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getId()).thenReturn(1L);
 
                 String accessToken = "accessToken";
-                when(spotifyTokenService.getValidToken("userId")).thenReturn(accessToken);
+                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
 
                 Instant lastAddedAt = Instant.parse("2024-12-24T10:21:33.00Z");
                 when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
@@ -126,7 +126,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getId()).thenReturn(1L);
 
                 String accessToken = "accessToken";
-                when(spotifyTokenService.getValidToken("userId")).thenReturn(accessToken);
+                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
 
                 Instant lastAddedAt = Instant.parse("2024-12-24T10:21:33.00Z");
                 when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
@@ -168,7 +168,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getId()).thenReturn(1L);
 
                 String accessToken = "accessToken";
-                when(spotifyTokenService.getValidToken("userId")).thenReturn(accessToken);
+                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
 
                 Instant lastAddedAt = Instant.parse("2024-12-26T21:34:00.00Z");
                 when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
@@ -209,7 +209,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
 
-                when(spotifyTokenService.getValidToken("userId")).thenReturn("accessToken");
+                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
                 when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(null);
 
                 AlbumItem albumItem = new AlbumItem(null, 0, null, null, null, "albumId",
@@ -240,7 +240,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
 
-                when(spotifyTokenService.getValidToken("userId")).thenReturn("accessToken");
+                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
                 when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(null);
 
                 AlbumItem album1 = new AlbumItem(null, 0, null, null, null, "album1", null, null, "2024-12-24", "day",
@@ -278,7 +278,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
 
-                when(spotifyTokenService.getValidToken("userId")).thenReturn("accessToken");
+                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
                 Instant lastAddedAt = Instant.parse("2024-01-01T00:00:00Z");
                 when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
 
@@ -315,7 +315,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
 
-                when(spotifyTokenService.getValidToken("userId")).thenReturn("accessToken");
+                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
                 Instant lastAddedAt = Instant.parse("2000-01-01T00:00:00Z"); // Set old date to ensure album passes
                                                                              // filter
                 when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);

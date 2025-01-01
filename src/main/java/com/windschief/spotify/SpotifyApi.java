@@ -134,15 +134,4 @@ public interface SpotifyApi {
                         @PathParam("playlistId") String playlistId,
                         @FormParam("uris") String uris,
                         @FormParam("position") Integer position) throws WebApplicationException;
-
-        /**
-         * Get the next page of a paginated response.
-         *
-         * @param authHeader   The authorization header containing the access token.
-         * @param responseType The class type of the expected response.
-         * @return The next page of results.
-         * @throws WebApplicationException if the request fails.
-         */
-        @GET
-        <T> T getNextPage(@HeaderParam("Authorization") String authHeader, Class<T> responseType);
 }

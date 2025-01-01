@@ -70,8 +70,8 @@ public class ReleaseRadarService {
                 return;
             }
 
-            String accessToken = spotifyTokenService.getValidToken(task.getUserId());
-            addAlbumsToPlaylist(task, newAlbumIds, accessToken);
+            String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
+            addAlbumsToPlaylist(task, newAlbumIds, bearerToken);
 
             task.setLastTimeExecuted(Instant.now());
             taskRepository.persist(task);
@@ -81,14 +81,14 @@ public class ReleaseRadarService {
         }
     }
 
-    private void addAlbumsToPlaylist(Task task, Set<String> newAlbumIds, String accessToken)
+    private void addAlbumsToPlaylist(Task task, Set<String> newAlbumIds, String bearerToken)
             throws WebApplicationException {
         for (int i = 0; i < newAlbumIds.size(); i += CHUNK_SIZE) {
             final String idsChunk = newAlbumIds.stream()
                     .skip(i)
                     .limit(CHUNK_SIZE)
                     .collect(Collectors.joining(","));
-            spotifyApi.addToPlaylist(accessToken, task.getExternalDestinationId(), idsChunk, null);
+            spotifyApi.addToPlaylist(bearerToken, task.getExternalDestinationId(), idsChunk, null);
         }
     }
 }
