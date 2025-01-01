@@ -50,26 +50,34 @@ public class ReleaseRadarService {
                 .filter(Task::isDue)
                 .toList();
 
-        for (Task task : tasks) {
-            try {
-                Set<String> newAlbumIds = releaseDetectionService.detectNewAlbumIds(task);
-                if (newAlbumIds.isEmpty()) {
-                    continue;
-                }
-
-                String token = spotifyTokenService.getValidToken(task.getUserId());
-                addAlbumsToPlaylist(task, newAlbumIds, token);
-
-                task.setLastTimeExecuted(Instant.now());
-                taskRepository.persist(task);
-            } catch (WebApplicationException e) {
-                Log.error(String.format("Failed to process task [taskId=%s, userId=%s, playlistId=%s]",
-                        task.getId(), task.getUserId(), task.getExternalDestinationId()), e);
-            }
-        }
+        tasks.forEach(this::execute);
 
         Log.info(String.format("Release radar job completed in %s seconds for %d tasks",
                 Duration.between(startTime, Instant.now()), tasks.size()));
+    }
+
+    @Transactional
+    public void execute(Long taskId) {
+        Task task = taskRepository.findById(taskId);
+        execute(task);
+    }
+
+    private void execute(Task task) {
+        try {
+            Set<String> newAlbumIds = releaseDetectionService.detectNewAlbumIds(task);
+            if (newAlbumIds.isEmpty()) {
+                return;
+            }
+
+            String token = spotifyTokenService.getValidToken(task.getUserId());
+            addAlbumsToPlaylist(task, newAlbumIds, token);
+
+            task.setLastTimeExecuted(Instant.now());
+            taskRepository.persist(task);
+        } catch (WebApplicationException e) {
+            Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
+                    task.getId(), task.getUserId(), task.getExternalDestinationId()), e);
+        }
     }
 
     private void addAlbumsToPlaylist(Task task, Set<String> newAlbumIds, String token) throws WebApplicationException {

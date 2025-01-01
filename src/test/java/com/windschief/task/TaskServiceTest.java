@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.windschief.auth.SpotifyTokenService;
+import com.windschief.releasedetection.ReleaseRadarService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,11 +32,12 @@ class TaskServiceTest {
     private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
     private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
-    private TaskService taskService;
+    private final ReleaseRadarService releaseRadarService = mock(ReleaseRadarService.class);
+    private final TaskService taskService = new TaskService(taskAccess, taskRepository, spotifyTokenService,
+            releaseRadarService);
 
     @BeforeEach
     public void setup() {
-        taskService = new TaskService(taskAccess, taskRepository, spotifyTokenService);
         when(taskAccess.getCurrentUserId()).thenReturn("testUser");
 
         final Principal principal = mock(Principal.class);

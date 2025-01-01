@@ -1,8 +1,10 @@
 package com.windschief.task;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import com.windschief.auth.SpotifyTokenService;
+import com.windschief.releasedetection.ReleaseRadarService;
 
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
@@ -12,16 +14,18 @@ import jakarta.ws.rs.core.Response;
 
 @RequestScoped
 public class TaskService implements TaskApi {
-
     private final TaskAccess taskAccess;
     private final TaskRepository taskRepository;
     private final SpotifyTokenService spotifyTokenService;
+    private final ReleaseRadarService releaseRadarService;
 
     @Inject
-    public TaskService(TaskAccess taskAccess, TaskRepository taskRepository, SpotifyTokenService spotifyTokenService) {
+    public TaskService(TaskAccess taskAccess, TaskRepository taskRepository, SpotifyTokenService spotifyTokenService,
+            ReleaseRadarService releaseRadarService) {
         this.taskAccess = taskAccess;
         this.taskRepository = taskRepository;
         this.spotifyTokenService = spotifyTokenService;
+        this.releaseRadarService = releaseRadarService;
     }
 
     @Override
@@ -38,6 +42,18 @@ public class TaskService implements TaskApi {
         taskAccess.checkAccess(task);
 
         return Response.ok(TaskResponseDto.from(task)).build();
+    }
+
+    @Override
+    public Response executeTask(Long id) {
+        Task task = taskRepository.findById(id);
+
+        taskAccess.checkAccess(task);
+
+        task.getTaskItems().size();
+        CompletableFuture.runAsync(() -> releaseRadarService.execute(id));
+
+        return Response.accepted().build();
     }
 
     @Override

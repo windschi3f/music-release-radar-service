@@ -46,6 +46,17 @@ public interface TaskApi {
         @Authenticated
         Response getTask(@Parameter(description = "ID of the task", required = true) @PathParam("id") Long id);
 
+        @GET
+        @Path("/{id}/execute")
+        @Operation(summary = "Execute a task by ID")
+        @APIResponses(value = {
+                        @APIResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskResponseDto.class))),
+                        @APIResponse(responseCode = "401", description = "Unauthorized"),
+                        @APIResponse(responseCode = "404", description = "Task not found")
+        })
+        @Authenticated
+        Response executeTask(@Parameter(description = "ID of the task", required = true) @PathParam("id") Long id);
+
         @POST
         @Operation(summary = "Create a new task")
         @APIResponse(responseCode = "201", description = "Task created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskResponseDto.class)))
