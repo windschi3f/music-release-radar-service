@@ -53,7 +53,6 @@ public class ReleaseDetectionService {
         }
 
         final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
-        final Instant lastAddedAt = addedItemRepository.getLastAddedAt(task.getId());
         final List<String> artistIds = task.getTaskItems().stream()
                 .map(TaskItem::getExternalReferenceId)
                 .toList();
@@ -62,7 +61,7 @@ public class ReleaseDetectionService {
         for (String artistId : artistIds) {
             final List<AlbumItem> albums = getAllAlbums(bearerToken, artistId);
             albums.stream()
-                    .filter(album -> isAlbumAfterDate(album, lastAddedAt))
+                    .filter(album -> isAlbumAfterDate(album, task.getCheckFrom()))
                     .filter(album -> !addedItemRepository.existsByExternalIdAndTaskId(album.id(), task.getId()))
                     .map(AlbumItem::id)
                     .forEach(albumIds::add);
@@ -88,11 +87,7 @@ public class ReleaseDetectionService {
         return allAlbums;
     }
 
-    private boolean isAlbumAfterDate(AlbumItem album, Instant lastAddedAt) {
-        if (lastAddedAt == null) {
-            return true;
-        }
-
+    private boolean isAlbumAfterDate(AlbumItem album, Instant checkFrom) {
         final LocalDateTime releaseDateTime = switch (album.release_date_precision()) {
             case "day" -> LocalDate.parse(album.release_date()).atStartOfDay();
             case "month" -> YearMonth.parse(album.release_date()).atDay(1).atStartOfDay();
@@ -100,6 +95,7 @@ public class ReleaseDetectionService {
             default -> throw new IllegalArgumentException("Unknown date precision: " + album.release_date_precision());
         };
 
-        return releaseDateTime.isAfter(LocalDateTime.ofInstant(lastAddedAt, ZoneOffset.UTC));
+        return releaseDateTime.isAfter(LocalDateTime.ofInstant(checkFrom, ZoneOffset.UTC))
+                || releaseDateTime.isEqual(LocalDateTime.ofInstant(checkFrom, ZoneOffset.UTC));
     }
 }

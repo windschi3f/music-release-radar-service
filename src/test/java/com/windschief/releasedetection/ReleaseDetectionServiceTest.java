@@ -28,7 +28,6 @@ import com.windschief.task.item.TaskItemType;
 import jakarta.ws.rs.WebApplicationException;
 
 public class ReleaseDetectionServiceTest {
-
         private final SpotifyApi spotifyApi = mock(SpotifyApi.class);
         private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
         private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
@@ -81,12 +80,10 @@ public class ReleaseDetectionServiceTest {
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
+                when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-25T00:00:00Z"));
 
                 String accessToken = "accessToken";
                 when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
-
-                Instant lastAddedAt = Instant.parse("2024-12-24T10:21:33.00Z");
-                when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
 
                 AlbumItem albumItem = new AlbumItem(null, 0, null, null, null, "albumId",
                                 null, null, "2024-12-26", "day", null, null, null, null, null);
@@ -124,16 +121,15 @@ public class ReleaseDetectionServiceTest {
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
+                when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-25T00:00:00Z"));
+
+                when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(true);
 
                 String accessToken = "accessToken";
                 when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
-
-                Instant lastAddedAt = Instant.parse("2024-12-24T10:21:33.00Z");
-                when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
 
                 AlbumItem albumItem = new AlbumItem(null, 0, null, null, null, "albumId",
                                 null, null, "2024-12-26", "day", null, null, null, null, null);
-
                 AlbumsResponse albumsResponse = new AlbumsResponse(
                                 null,
                                 20,
@@ -142,10 +138,8 @@ public class ReleaseDetectionServiceTest {
                                 null,
                                 1,
                                 List.of(albumItem));
-
                 when(spotifyApi.getArtistAlbums(accessToken, "artistId", "album,single", 50, 0))
                                 .thenReturn(albumsResponse);
-                when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(true);
 
                 // WHEN
                 Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
@@ -155,7 +149,7 @@ public class ReleaseDetectionServiceTest {
         }
 
         @Test
-        public void givenReleaseBeforeLastAddedAt_whenDetectNewAlbumIds_thenDetectNoNewReleases()
+        public void givenReleaseBeforeCheckFrom_whenDetectNewAlbumIds_thenDetectNoNewReleases()
                         throws WebApplicationException, IOException, InterruptedException {
                 // GIVEN
                 Task task = mock(Task.class);
@@ -166,12 +160,12 @@ public class ReleaseDetectionServiceTest {
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
+                when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-26T00:00:00Z"));
 
                 String accessToken = "accessToken";
                 when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
 
-                Instant lastAddedAt = Instant.parse("2024-12-26T21:34:00.00Z");
-                when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
+                when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
                 AlbumItem albumItem = new AlbumItem(null, 0, null, null, null, "albumId",
                                 null, null, "2024-12-24", "day", null, null, null, null, null);
@@ -187,44 +181,12 @@ public class ReleaseDetectionServiceTest {
 
                 when(spotifyApi.getArtistAlbums(accessToken, "artistId", "album,single", 50, 0))
                                 .thenReturn(albumsResponse);
-                when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
                 // WHEN
                 Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
 
                 // THEN
                 assertEquals(0, albumIds.size());
-        }
-
-        @Test
-        public void givenNullLastAddedAt_whenDetectNewAlbumIds_thenDetectNewReleases()
-                        throws WebApplicationException, IOException, InterruptedException {
-                // GIVEN
-                Task task = mock(Task.class);
-                when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
-                TaskItem taskItem = mock(TaskItem.class);
-                when(taskItem.getItemType()).thenReturn(TaskItemType.ARTIST);
-                when(taskItem.getExternalReferenceId()).thenReturn("artistId");
-                when(task.getTaskItems()).thenReturn(List.of(taskItem));
-                when(task.getUserId()).thenReturn("userId");
-                when(task.getId()).thenReturn(1L);
-
-                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
-                when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(null);
-
-                AlbumItem albumItem = new AlbumItem(null, 0, null, null, null, "albumId",
-                                null, null, "2024-12-24", "day", null, null, null, null, null);
-                AlbumsResponse albumsResponse = new AlbumsResponse(null, 20, null, 0, null, 1, List.of(albumItem));
-                when(spotifyApi.getArtistAlbums("accessToken", "artistId", "album,single", 50, 0))
-                                .thenReturn(albumsResponse);
-                when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
-
-                // WHEN
-                Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
-
-                // THEN
-                assertEquals(1, albumIds.size());
-                assertTrue(albumIds.contains("albumId"));
         }
 
         @Test
@@ -239,9 +201,10 @@ public class ReleaseDetectionServiceTest {
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
+                when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-24T00:00:00Z"));
+                when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
                 when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
-                when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(null);
 
                 AlbumItem album1 = new AlbumItem(null, 0, null, null, null, "album1", null, null, "2024-12-24", "day",
                                 null,
@@ -255,7 +218,6 @@ public class ReleaseDetectionServiceTest {
                 when(spotifyApi.getArtistAlbums("accessToken", "artistId", "album,single", 50, 0))
                                 .thenReturn(response1);
                 when(httpClientService.get(any(), any(), any())).thenReturn(response2);
-                when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
                 // WHEN
                 Set<String> albumIds = releaseDetectionService.detectNewAlbumIds(task);
@@ -277,10 +239,9 @@ public class ReleaseDetectionServiceTest {
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
+                when(task.getCheckFrom()).thenReturn(Instant.parse("2024-01-02T00:00:00Z"));
 
                 when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
-                Instant lastAddedAt = Instant.parse("2024-01-01T00:00:00Z");
-                when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
 
                 AlbumItem monthAlbum = new AlbumItem(null, 0, null, null, null, "monthAlbum", null, null, "2024-02",
                                 "month",
@@ -314,11 +275,9 @@ public class ReleaseDetectionServiceTest {
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
+                when(task.getCheckFrom()).thenReturn(Instant.parse("2024-01-01T00:00:00Z"));
 
                 when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
-                Instant lastAddedAt = Instant.parse("2000-01-01T00:00:00Z"); // Set old date to ensure album passes
-                                                                             // filter
-                when(addedItemRepository.getLastAddedAt(task.getId())).thenReturn(lastAddedAt);
 
                 AlbumItem album = new AlbumItem(null, 0, null, null, null, "albumId", null, null, "2024", "unknown",
                                 null, null,
