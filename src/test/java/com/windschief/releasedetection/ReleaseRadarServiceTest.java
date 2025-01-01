@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -41,7 +42,8 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenNoTasks_whenAddNewReleases_thenNoAlbumsAreAdded() throws WebApplicationException {
+    public void givenNoTasks_whenAddNewReleases_thenNoAlbumsAreAdded()
+            throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         when(panacheTaskQuery.stream()).thenReturn(Stream.of());
 
@@ -53,7 +55,8 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenInactiveTask_whenAddNewReleases_thenNoAlbumsAreAdded() throws WebApplicationException {
+    public void givenInactiveTask_whenAddNewReleases_thenNoAlbumsAreAdded()
+            throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
         task.setActive(false);
@@ -68,7 +71,8 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenTaskNotDue_whenAddNewReleases_thenNoAlbumsAreAdded() throws WebApplicationException {
+    public void givenTaskNotDue_whenAddNewReleases_thenNoAlbumsAreAdded()
+            throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
         task.setActive(true);
@@ -84,7 +88,8 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenTaskDue_whenAddNewReleases_thenAlbumsAreAdded() throws WebApplicationException {
+    public void givenTaskDue_whenAddNewReleases_thenAlbumsAreAdded()
+            throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
         task.setActive(true);
@@ -106,7 +111,7 @@ public class ReleaseRadarServiceTest {
 
     @Test
     public void givenTaskDueWithoutNewReleases_whenAddNewReleases_thenNoAlbumsAreAdded()
-            throws WebApplicationException {
+            throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
         task.setActive(true);
@@ -127,7 +132,7 @@ public class ReleaseRadarServiceTest {
 
     @Test
     public void givenTaskThrowsException_whenAddNewReleases_thenOtherTasksAreStillProcessed()
-            throws WebApplicationException {
+            throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task1 = new Task();
         task1.setActive(true);
@@ -152,7 +157,8 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenSpotifyApiThrowsException_whenAddNewReleases_thenErrorIsHandled() throws WebApplicationException {
+    public void givenSpotifyApiThrowsException_whenAddNewReleases_thenErrorIsHandled()
+            throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
         task.setActive(true);

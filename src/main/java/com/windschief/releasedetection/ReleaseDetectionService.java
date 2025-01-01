@@ -1,5 +1,6 @@
 package com.windschief.releasedetection;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.util.Set;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.windschief.auth.SpotifyTokenService;
+import com.windschief.client.HttpClientService;
 import com.windschief.spotify.SpotifyApi;
 import com.windschief.spotify.model.AlbumItem;
 import com.windschief.spotify.model.AlbumsResponse;
@@ -31,16 +33,18 @@ public class ReleaseDetectionService {
     private final SpotifyApi spotifyApi;
     private final AddedItemRepository addedItemRepository;
     private final SpotifyTokenService spotifyTokenService;
+    private final HttpClientService httpClientService;
 
     @Inject
     public ReleaseDetectionService(@RestClient SpotifyApi spotifyApi, AddedItemRepository addedItemRepository,
-            SpotifyTokenService spotifyTokenService) {
+            SpotifyTokenService spotifyTokenService, HttpClientService httpClientService) {
         this.spotifyApi = spotifyApi;
         this.addedItemRepository = addedItemRepository;
         this.spotifyTokenService = spotifyTokenService;
+        this.httpClientService = httpClientService;
     }
 
-    public Set<String> detectNewAlbumIds(Task task) throws WebApplicationException {
+    public Set<String> detectNewAlbumIds(Task task) throws WebApplicationException, IOException, InterruptedException {
         if (task.getPlatform() != Platform.SPOTIFY) {
             throw new IllegalArgumentException("Unsupported platform: " + task.getPlatform());
         }
@@ -67,7 +71,8 @@ public class ReleaseDetectionService {
         return albumIds;
     }
 
-    private List<AlbumItem> getAllAlbums(String accessToken, String artistId) throws WebApplicationException {
+    private List<AlbumItem> getAllAlbums(String accessToken, String artistId)
+            throws WebApplicationException, IOException, InterruptedException {
         final List<AlbumItem> allAlbums = new ArrayList<>();
 
         AlbumsResponse response = spotifyApi.getArtistAlbums(accessToken, artistId, "album,single", 50, 0);
@@ -76,7 +81,8 @@ public class ReleaseDetectionService {
             if (response.next() == null) {
                 break;
             }
-            response = spotifyApi.getNextPage(accessToken, AlbumsResponse.class);
+
+            response = httpClientService.get(response.next(), accessToken, AlbumsResponse.class);
         }
 
         return allAlbums;

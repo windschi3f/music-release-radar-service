@@ -1,5 +1,6 @@
 package com.windschief.releasedetection;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -69,24 +70,25 @@ public class ReleaseRadarService {
                 return;
             }
 
-            String token = spotifyTokenService.getValidToken(task.getUserId());
-            addAlbumsToPlaylist(task, newAlbumIds, token);
+            String accessToken = spotifyTokenService.getValidToken(task.getUserId());
+            addAlbumsToPlaylist(task, newAlbumIds, accessToken);
 
             task.setLastTimeExecuted(Instant.now());
             taskRepository.persist(task);
-        } catch (WebApplicationException e) {
+        } catch (WebApplicationException | IOException | InterruptedException e) {
             Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
                     task.getId(), task.getUserId(), task.getExternalDestinationId()), e);
         }
     }
 
-    private void addAlbumsToPlaylist(Task task, Set<String> newAlbumIds, String token) throws WebApplicationException {
+    private void addAlbumsToPlaylist(Task task, Set<String> newAlbumIds, String accessToken)
+            throws WebApplicationException {
         for (int i = 0; i < newAlbumIds.size(); i += CHUNK_SIZE) {
             final String idsChunk = newAlbumIds.stream()
                     .skip(i)
                     .limit(CHUNK_SIZE)
                     .collect(Collectors.joining(","));
-            spotifyApi.addToPlaylist(token, task.getExternalDestinationId(), idsChunk, null);
+            spotifyApi.addToPlaylist(accessToken, task.getExternalDestinationId(), idsChunk, null);
         }
     }
 }
