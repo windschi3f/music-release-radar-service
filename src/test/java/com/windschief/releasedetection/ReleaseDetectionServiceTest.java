@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.windschief.auth.SpotifyTokenService;
@@ -28,6 +29,8 @@ import com.windschief.task.item.TaskItemType;
 import jakarta.ws.rs.WebApplicationException;
 
 public class ReleaseDetectionServiceTest {
+        private static final String ACCESS_TOKEN = "accessToken";
+
         private final SpotifyApi spotifyApi = mock(SpotifyApi.class);
         private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
         private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
@@ -35,8 +38,13 @@ public class ReleaseDetectionServiceTest {
         private final ReleaseDetectionService releaseDetectionService = new ReleaseDetectionService(spotifyApi,
                         addedItemRepository, spotifyTokenService, httpClientService);
 
+        @BeforeEach
+        void setup() {
+                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(ACCESS_TOKEN);
+        }
+
         @Test
-        public void givenUnspportedPlatform_whenDetectNewAlbumIds_thenThrowIllegalArgumentException() {
+        void givenUnspportedPlatform_whenDetectNewAlbumIds_thenThrowIllegalArgumentException() {
                 // GIVEN
                 Task task = mock(Task.class);
                 when(task.getPlatform()).thenReturn(Platform.YOUTUBE);
@@ -51,7 +59,7 @@ public class ReleaseDetectionServiceTest {
         }
 
         @Test
-        public void givenUnspportedTaskItemType_whenDetectNewAlbumIds_thenThrowIllegalArgumentException() {
+        void givenUnspportedTaskItemType_whenDetectNewAlbumIds_thenThrowIllegalArgumentException() {
                 // GIVEN
                 Task task = mock(Task.class);
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -69,7 +77,7 @@ public class ReleaseDetectionServiceTest {
         }
 
         @Test
-        public void givenNewRelease_whenDetectNewAlbumIds_thenDetectNewReleases()
+        void givenNewRelease_whenDetectNewAlbumIds_thenDetectNewReleases()
                         throws WebApplicationException, IOException, InterruptedException {
                 // GIVEN
                 Task task = mock(Task.class);
@@ -81,9 +89,6 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-25T00:00:00Z"));
-
-                String accessToken = "accessToken";
-                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
 
                 AlbumItem albumItem = new AlbumItem(null, 0, null, null, null, "albumId",
                                 null, null, "2024-12-26", "day", null, null, null, null, null);
@@ -97,7 +102,7 @@ public class ReleaseDetectionServiceTest {
                                 1,
                                 List.of(albumItem));
 
-                when(spotifyApi.getArtistAlbums(accessToken, "artistId", "album,single", 50, 0))
+                when(spotifyApi.getArtistAlbums(ACCESS_TOKEN, "artistId", "album,single", 50, 0))
                                 .thenReturn(albumsResponse);
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
@@ -110,7 +115,7 @@ public class ReleaseDetectionServiceTest {
         }
 
         @Test
-        public void givenAlreadyAddedNewRelease_whenDetectNewAlbumIds_thenDetectNoNewReleases()
+        void givenAlreadyAddedNewRelease_whenDetectNewAlbumIds_thenDetectNoNewReleases()
                         throws WebApplicationException, IOException, InterruptedException {
                 // GIVEN
                 Task task = mock(Task.class);
@@ -125,9 +130,6 @@ public class ReleaseDetectionServiceTest {
 
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(true);
 
-                String accessToken = "accessToken";
-                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
-
                 AlbumItem albumItem = new AlbumItem(null, 0, null, null, null, "albumId",
                                 null, null, "2024-12-26", "day", null, null, null, null, null);
                 AlbumsResponse albumsResponse = new AlbumsResponse(
@@ -138,7 +140,7 @@ public class ReleaseDetectionServiceTest {
                                 null,
                                 1,
                                 List.of(albumItem));
-                when(spotifyApi.getArtistAlbums(accessToken, "artistId", "album,single", 50, 0))
+                when(spotifyApi.getArtistAlbums(ACCESS_TOKEN, "artistId", "album,single", 50, 0))
                                 .thenReturn(albumsResponse);
 
                 // WHEN
@@ -149,7 +151,7 @@ public class ReleaseDetectionServiceTest {
         }
 
         @Test
-        public void givenReleaseBeforeCheckFrom_whenDetectNewAlbumIds_thenDetectNoNewReleases()
+        void givenReleaseBeforeCheckFrom_whenDetectNewAlbumIds_thenDetectNoNewReleases()
                         throws WebApplicationException, IOException, InterruptedException {
                 // GIVEN
                 Task task = mock(Task.class);
@@ -161,9 +163,6 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-26T00:00:00Z"));
-
-                String accessToken = "accessToken";
-                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(accessToken);
 
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
@@ -179,7 +178,7 @@ public class ReleaseDetectionServiceTest {
                                 1,
                                 List.of(albumItem));
 
-                when(spotifyApi.getArtistAlbums(accessToken, "artistId", "album,single", 50, 0))
+                when(spotifyApi.getArtistAlbums(ACCESS_TOKEN, "artistId", "album,single", 50, 0))
                                 .thenReturn(albumsResponse);
 
                 // WHEN
@@ -190,7 +189,7 @@ public class ReleaseDetectionServiceTest {
         }
 
         @Test
-        public void givenMultiplePages_whenDetectNewAlbumIds_thenDetectNewReleases()
+        void givenMultiplePages_whenDetectNewAlbumIds_thenDetectNewReleases()
                         throws WebApplicationException, IOException, InterruptedException {
                 // GIVEN
                 Task task = mock(Task.class);
@@ -203,8 +202,6 @@ public class ReleaseDetectionServiceTest {
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-24T00:00:00Z"));
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
-
-                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
 
                 AlbumItem album1 = new AlbumItem(null, 0, null, null, null, "album1", null, null, "2024-12-24", "day",
                                 null,
@@ -228,7 +225,7 @@ public class ReleaseDetectionServiceTest {
         }
 
         @Test
-        public void givenDifferentDatePrecisions_whenDetectNewAlbumIds_thenHandleCorrectly()
+        void givenDifferentDatePrecisions_whenDetectNewAlbumIds_thenHandleCorrectly()
                         throws WebApplicationException, IOException, InterruptedException {
                 // GIVEN
                 Task task = mock(Task.class);
@@ -240,8 +237,6 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-01-02T00:00:00Z"));
-
-                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
 
                 AlbumItem monthAlbum = new AlbumItem(null, 0, null, null, null, "monthAlbum", null, null, "2024-02",
                                 "month",
@@ -264,7 +259,7 @@ public class ReleaseDetectionServiceTest {
         }
 
         @Test
-        public void givenUnknownDatePrecision_whenDetectNewAlbumIds_thenThrowException()
+        void givenUnknownDatePrecision_whenDetectNewAlbumIds_thenThrowException()
                         throws WebApplicationException {
                 // GIVEN
                 Task task = mock(Task.class);
@@ -276,8 +271,6 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-01-01T00:00:00Z"));
-
-                when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn("accessToken");
 
                 AlbumItem album = new AlbumItem(null, 0, null, null, null, "albumId", null, null, "2024", "unknown",
                                 null, null,
