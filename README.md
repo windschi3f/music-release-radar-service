@@ -53,6 +53,74 @@ You can then execute your native executable with: `./target/music-release-radar-
 
 If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
 
+## Running the application with Docker
+
+### Step 1: Create a Docker network and configure the PostgreSQL container
+
+A custom Docker network is required to enable communication between the PostgreSQL container and the application container. The PostgreSQL container needs to be connected to the same network as the application container, so they can communicate using container names instead of IP addresses.
+
+This configuration allows the application container to resolve `postgres-db` to the PostgreSQL container within the same Docker network:
+```properties
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://postgres-db:5432/music_release_radar_service_db
+```
+
+Create the Docker network:
+
+```bash
+docker network create music-net
+```
+
+Then, start the PostgreSQL container with the following command, ensuring it is connected to the `music-net` network:
+
+```bash
+docker run -d
+    --name postgres-db
+    --network music-net
+    -e POSTGRES_USER=quarkus
+    -e POSTGRES_PASSWORD=quarkus
+    -e POSTGRES_DB=music_release_radar_service_db
+    postgres:16
+```
+
+### Step 2: Build and run the application container
+
+Build the application Docker image:
+
+```bash
+docker build -f src/main/docker/Dockerfile.jvm -t music-release-radar-service .
+```
+
+Start the application container, linking it to the `music-net` network:
+
+```bash
+docker run -d
+    --name music-release-radar-service
+    --network music-net
+    -e QUARKUS_PROFILE=prod
+    -p 8080:8080
+    music-release-radar-service
+```
+
+### Step 3: Manage and verify containers
+
+- verify running containers:
+```bash
+docker ps
+```
+
+- view logs of containers to ensure they started correctly:
+
+```bash
+docker logs <container_id>
+```
+
+- stop and remove the containers:
+
+```bash
+docker stop music-release-radar-service postgres-db
+docker rm music-release-radar-service postgres-db
+```
+
 ## Related Guides
 
 - REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
