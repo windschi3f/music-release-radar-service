@@ -28,8 +28,11 @@ public class SpotifyTokenRetrieval {
     }
 
     private static String getAuthorizationCode() {
-        String url = AUTH_URL + "?client_id=" + CLIENT_ID + "&response_type=code&redirect_uri="
-                + URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8) + "&scope=user-read-private";
+        String url = AUTH_URL
+                + "?client_id=" + CLIENT_ID
+                + "&response_type=code"
+                + "&redirect_uri=" + URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8)
+                + "&scope=playlist-modify-private,playlist-modify-public";
         System.out.println("Please open the following URL in your browser and authorize the application:");
         System.out.println(url);
         System.out.println(
