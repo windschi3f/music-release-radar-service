@@ -59,7 +59,7 @@ public class ReleaseRadarService {
         tasks.forEach(this::execute);
 
         Log.info(String.format("Release radar job completed in %s seconds for %d tasks",
-                Duration.between(startTime, Instant.now()), tasks.size()));
+                Duration.between(startTime, Instant.now()).toSeconds(), tasks.size()));
     }
 
     public void execute(Task task) {
