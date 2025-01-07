@@ -22,6 +22,7 @@ import com.windschief.spotify.model.TrackItem;
 import com.windschief.spotify.model.TracksResponse;
 import com.windschief.task.Platform;
 import com.windschief.task.Task;
+import com.windschief.task.TaskRepository;
 import com.windschief.task.added_item.AddedItemRepository;
 import com.windschief.task.item.TaskItem;
 import com.windschief.task.item.TaskItemType;
@@ -37,19 +38,35 @@ public class ReleaseDetectionService {
     private final AddedItemRepository addedItemRepository;
     private final SpotifyTokenService spotifyTokenService;
     private final HttpClientService httpClientService;
+    private final TaskRepository taskRepository;
 
     @Inject
     public ReleaseDetectionService(@RestClient SpotifyApi spotifyApi, AddedItemRepository addedItemRepository,
-            SpotifyTokenService spotifyTokenService, HttpClientService httpClientService) {
+            SpotifyTokenService spotifyTokenService, HttpClientService httpClientService,
+            TaskRepository taskRepository) {
         this.spotifyApi = spotifyApi;
         this.addedItemRepository = addedItemRepository;
         this.spotifyTokenService = spotifyTokenService;
         this.httpClientService = httpClientService;
+        this.taskRepository = taskRepository;
+    }
+
+    public List<TrackItem> detectNewReleaseTracks(long taskId)
+            throws WebApplicationException, IOException, InterruptedException {
+        final Task task = loadAndValidateTask(taskId);
+
+        final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
+        final Set<String> newAlbumIds = detectNewAlbumIds(task, bearerToken);
+
+        return getTracksForAlbums(bearerToken, newAlbumIds);
     }
 
     @Transactional
-    public List<TrackItem> detectNewReleaseTracks(Task task)
-            throws WebApplicationException, IOException, InterruptedException {
+    protected Task loadAndValidateTask(Long taskId) {
+        Task task = taskRepository.findById(taskId);
+
+        task.getTaskItems().size(); // trigger lazy loading
+
         if (task.getPlatform() != Platform.SPOTIFY) {
             throw new IllegalArgumentException("Unsupported platform: " + task.getPlatform());
         }
@@ -57,10 +74,7 @@ public class ReleaseDetectionService {
             throw new IllegalArgumentException("Unsupported task item type: PLAYLIST");
         }
 
-        final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
-        final Set<String> newAlbumIds = detectNewAlbumIds(task, bearerToken);
-
-        return getTracksForAlbums(bearerToken, newAlbumIds);
+        return task;
     }
 
     private Set<String> detectNewAlbumIds(Task task, String bearerToken)
@@ -74,7 +88,7 @@ public class ReleaseDetectionService {
             final List<AlbumItem> albums = getAllAlbums(bearerToken, artistId);
             albums.stream()
                     .filter(album -> isAlbumAfterDate(album, task.getCheckFrom()))
-                    .filter(album -> !addedItemRepository.existsByExternalIdAndTaskId(album.id(), task.getId()))
+                    .filter(album -> !isAlbumProcessed(album.id(), task.getId()))
                     .map(AlbumItem::id)
                     .forEach(albumIds::add);
         }
@@ -109,6 +123,11 @@ public class ReleaseDetectionService {
 
         return releaseDateTime.isAfter(LocalDateTime.ofInstant(checkFrom, ZoneOffset.UTC))
                 || releaseDateTime.isEqual(LocalDateTime.ofInstant(checkFrom, ZoneOffset.UTC));
+    }
+
+    @Transactional
+    protected boolean isAlbumProcessed(String albumId, Long taskId) {
+        return addedItemRepository.existsByExternalIdAndTaskId(albumId, taskId);
     }
 
     private List<TrackItem> getTracksForAlbums(String bearerToken, Set<String> albumIds)

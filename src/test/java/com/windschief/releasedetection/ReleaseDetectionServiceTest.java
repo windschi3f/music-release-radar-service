@@ -25,6 +25,7 @@ import com.windschief.spotify.model.TrackItem;
 import com.windschief.spotify.model.TracksResponse;
 import com.windschief.task.Platform;
 import com.windschief.task.Task;
+import com.windschief.task.TaskRepository;
 import com.windschief.task.added_item.AddedItemRepository;
 import com.windschief.task.item.TaskItem;
 import com.windschief.task.item.TaskItemType;
@@ -38,8 +39,9 @@ public class ReleaseDetectionServiceTest {
         private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
         private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
         private final HttpClientService httpClientService = mock(HttpClientService.class);
+        private final TaskRepository taskRepository = mock(TaskRepository.class);
         private final ReleaseDetectionService releaseDetectionService = new ReleaseDetectionService(spotifyApi,
-                        addedItemRepository, spotifyTokenService, httpClientService);
+                        addedItemRepository, spotifyTokenService, httpClientService, taskRepository);
 
         @BeforeEach
         void setup() {
@@ -51,10 +53,11 @@ public class ReleaseDetectionServiceTest {
                 // GIVEN
                 Task task = mock(Task.class);
                 when(task.getPlatform()).thenReturn(Platform.YOUTUBE);
+                when(taskRepository.findById(1L)).thenReturn(task);
 
                 // WHEN
                 IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                        releaseDetectionService.detectNewReleaseTracks(task);
+                        releaseDetectionService.detectNewReleaseTracks(1L);
                 });
 
                 // THEN
@@ -69,10 +72,11 @@ public class ReleaseDetectionServiceTest {
                 TaskItem taskItem = mock(TaskItem.class);
                 when(taskItem.getItemType()).thenReturn(TaskItemType.PLAYLIST);
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
+                when(taskRepository.findById(1L)).thenReturn(task);
 
                 // WHEN
                 IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                        releaseDetectionService.detectNewReleaseTracks(task);
+                        releaseDetectionService.detectNewReleaseTracks(1L);
                 });
 
                 // THEN
@@ -92,6 +96,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-25T00:00:00Z"));
+                when(taskRepository.findById(1L)).thenReturn(task);
 
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
@@ -113,7 +118,7 @@ public class ReleaseDetectionServiceTest {
                 when(spotifyApi.getAlbumTracks(ACCESS_TOKEN, "albumId", 50, 0)).thenReturn(tracksResponse);
 
                 // WHEN
-                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(task);
+                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(1L);
 
                 // THEN
                 assertEquals(1, trackItems.size());
@@ -133,6 +138,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-25T00:00:00Z"));
+                when(taskRepository.findById(1L)).thenReturn(task);
 
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(true);
 
@@ -154,7 +160,7 @@ public class ReleaseDetectionServiceTest {
                 when(spotifyApi.getAlbumTracks(ACCESS_TOKEN, "albumId", 50, 0)).thenReturn(tracksResponse);
 
                 // WHEN
-                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(task);
+                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(1L);
 
                 // THEN
                 assertEquals(0, trackItems.size());
@@ -173,6 +179,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-26T00:00:00Z"));
+                when(taskRepository.findById(1L)).thenReturn(task);
 
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
@@ -192,7 +199,7 @@ public class ReleaseDetectionServiceTest {
                                 .thenReturn(albumsResponse);
 
                 // WHEN
-                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(task);
+                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(1L);
 
                 // THEN
                 assertEquals(0, trackItems.size());
@@ -212,6 +219,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-12-24T00:00:00Z"));
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
+                when(taskRepository.findById(1L)).thenReturn(task);
 
                 AlbumItem album1 = new AlbumItem(null, 0, null, null, null, "album1", null, null, "2024-12-24", "day",
                                 null,
@@ -235,7 +243,7 @@ public class ReleaseDetectionServiceTest {
                 when(httpClientService.get(any(), any(), eq(TracksResponse.class))).thenReturn(tracksResponse2);
 
                 // WHEN
-                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(task);
+                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(1L);
 
                 // THEN
                 assertEquals(4, trackItems.size());
@@ -256,6 +264,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-01-02T00:00:00Z"));
+                when(taskRepository.findById(1L)).thenReturn(task);
 
                 when(addedItemRepository.existsByExternalIdAndTaskId(any(), any())).thenReturn(false);
 
@@ -274,7 +283,7 @@ public class ReleaseDetectionServiceTest {
                 when(spotifyApi.getAlbumTracks(ACCESS_TOKEN, "monthAlbum", 50, 0)).thenReturn(tracksResponse);
 
                 // WHEN
-                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(task);
+                List<TrackItem> trackItems = releaseDetectionService.detectNewReleaseTracks(1L);
 
                 // THEN
                 assertEquals(1, trackItems.size());
@@ -294,6 +303,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
                 when(task.getCheckFrom()).thenReturn(Instant.parse("2024-01-01T00:00:00Z"));
+                when(taskRepository.findById(1L)).thenReturn(task);
 
                 AlbumItem album = new AlbumItem(null, 0, null, null, null, "albumId", null, null, "2024", "unknown",
                                 null, null,
@@ -305,7 +315,7 @@ public class ReleaseDetectionServiceTest {
 
                 // WHEN
                 IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                        releaseDetectionService.detectNewReleaseTracks(task);
+                        releaseDetectionService.detectNewReleaseTracks(1L);
                 });
 
                 // THEN

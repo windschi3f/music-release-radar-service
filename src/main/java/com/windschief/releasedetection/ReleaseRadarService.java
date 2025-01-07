@@ -1,6 +1,5 @@
 package com.windschief.releasedetection;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -41,7 +40,6 @@ public class ReleaseRadarService {
         this.spotifyApi = spotifyApi;
     }
 
-    @Transactional
     @Scheduled(every = "24h")
     public void addNewReleases() {
         Instant startTime = Instant.now();
@@ -58,22 +56,20 @@ public class ReleaseRadarService {
                 Duration.between(startTime, Instant.now()), tasks.size()));
     }
 
-    @Transactional
     public void execute(Task task) {
         try {
-            final Set<String> newReleaseTrackUris = releaseDetectionService.detectNewReleaseTracks(task).stream()
+            final Set<String> newReleaseTrackUris = releaseDetectionService.detectNewReleaseTracks(task.getId())
+                    .stream()
                     .map(TrackItem::uri)
                     .collect(Collectors.toSet());
             if (newReleaseTrackUris.isEmpty()) {
                 return;
             }
 
-            String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
+            final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
             addTrackUrisToPlaylist(task, newReleaseTrackUris, bearerToken);
-
-            task.setLastTimeExecuted(Instant.now());
-            taskRepository.persist(task);
-        } catch (WebApplicationException | IOException | InterruptedException e) {
+            updateTaskExecutionTime(task.getId());
+        } catch (Exception e) {
             Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
                     task.getId(), task.getUserId(), task.getExternalDestinationId()), e);
         }
@@ -88,5 +84,12 @@ public class ReleaseRadarService {
                     .collect(Collectors.joining(","));
             spotifyApi.addToPlaylist(bearerToken, task.getExternalDestinationId(), idsChunk, null);
         }
+    }
+
+    @Transactional
+    protected void updateTaskExecutionTime(long taskId) {
+        Task task = taskRepository.findById(taskId);
+        task.setLastTimeExecuted(Instant.now());
+        taskRepository.persist(task);
     }
 }
