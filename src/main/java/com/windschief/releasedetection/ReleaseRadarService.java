@@ -13,6 +13,8 @@ import com.windschief.spotify.SpotifyApi;
 import com.windschief.spotify.model.TrackItem;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
+import com.windschief.task.added_item.AddedItem;
+import com.windschief.task.added_item.AddedItemRepository;
 
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
@@ -27,17 +29,20 @@ public class ReleaseRadarService {
     private final TaskRepository taskRepository;
     private final SpotifyTokenService spotifyTokenService;
     private final SpotifyApi spotifyApi;
+    private final AddedItemRepository addedItemRepository;
 
     @Inject
     public ReleaseRadarService(
             ReleaseDetectionService releaseDetectionService,
             TaskRepository taskRepository,
             SpotifyTokenService spotifyTokenService,
-            @RestClient SpotifyApi spotifyApi) {
+            @RestClient SpotifyApi spotifyApi,
+            AddedItemRepository addedItemRepository) {
         this.releaseDetectionService = releaseDetectionService;
         this.taskRepository = taskRepository;
         this.spotifyTokenService = spotifyTokenService;
         this.spotifyApi = spotifyApi;
+        this.addedItemRepository = addedItemRepository;
     }
 
     @Scheduled(every = "24h")
@@ -68,6 +73,7 @@ public class ReleaseRadarService {
 
             final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
             addTrackUrisToPlaylist(task, newReleaseTrackUris, bearerToken);
+            addTrackUrisToAddedTaskItems(task, newReleaseTrackUris);
             updateTaskExecutionTime(task.getId());
         } catch (Exception e) {
             Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
@@ -83,6 +89,18 @@ public class ReleaseRadarService {
                     .limit(CHUNK_SIZE)
                     .collect(Collectors.joining(","));
             spotifyApi.addToPlaylist(bearerToken, task.getExternalDestinationId(), idsChunk, null);
+        }
+    }
+
+    @Transactional
+    protected void addTrackUrisToAddedTaskItems(Task task, Set<String> trackUris) {
+        Instant now = Instant.now();
+        for (String trackUri : trackUris) {
+            AddedItem addedItem = new AddedItem();
+            addedItem.setTask(task);
+            addedItem.setExternalId(trackUri);
+            addedItem.setAddedAt(now);
+            addedItemRepository.persist(addedItem);
         }
     }
 

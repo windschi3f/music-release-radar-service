@@ -17,6 +17,7 @@ import com.windschief.spotify.SpotifyApi;
 import com.windschief.spotify.model.TrackItem;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
+import com.windschief.task.added_item.AddedItemRepository;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.ws.rs.WebApplicationException;
@@ -26,8 +27,9 @@ public class ReleaseRadarServiceTest {
         private final TaskRepository taskRepository = mock(TaskRepository.class);
         private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
         private final SpotifyApi spotifyApi = mock(SpotifyApi.class);
+        private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
         private final ReleaseRadarService releaseRadarService = new ReleaseRadarService(releaseDetectionService,
-                        taskRepository, spotifyTokenService, spotifyApi);
+                        taskRepository, spotifyTokenService, spotifyApi, addedItemRepository);
 
         @SuppressWarnings("unchecked")
         private final PanacheQuery<Task> panacheTaskQuery = mock(PanacheQuery.class);
