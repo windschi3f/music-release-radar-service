@@ -11,6 +11,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.spotify.SpotifyApi;
+import com.windschief.spotify.model.TrackItem;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
 
@@ -60,13 +61,15 @@ public class ReleaseRadarService {
     @Transactional
     public void execute(Task task) {
         try {
-            Set<String> newAlbumIds = releaseDetectionService.detectNewAlbumIds(task);
-            if (newAlbumIds.isEmpty()) {
+            final Set<String> newReleaseTrackUris = releaseDetectionService.detectNewReleaseTracks(task).stream()
+                    .map(TrackItem::uri)
+                    .collect(Collectors.toSet());
+            if (newReleaseTrackUris.isEmpty()) {
                 return;
             }
 
             String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
-            addAlbumsToPlaylist(task, newAlbumIds, bearerToken);
+            addTrackUrisToPlaylist(task, newReleaseTrackUris, bearerToken);
 
             task.setLastTimeExecuted(Instant.now());
             taskRepository.persist(task);
@@ -76,10 +79,10 @@ public class ReleaseRadarService {
         }
     }
 
-    private void addAlbumsToPlaylist(Task task, Set<String> newAlbumIds, String bearerToken)
+    private void addTrackUrisToPlaylist(Task task, Set<String> trackUris, String bearerToken)
             throws WebApplicationException {
-        for (int i = 0; i < newAlbumIds.size(); i += CHUNK_SIZE) {
-            final String idsChunk = newAlbumIds.stream()
+        for (int i = 0; i < trackUris.size(); i += CHUNK_SIZE) {
+            final String idsChunk = trackUris.stream()
                     .skip(i)
                     .limit(CHUNK_SIZE)
                     .collect(Collectors.joining(","));

@@ -18,6 +18,8 @@ import com.windschief.client.HttpClientService;
 import com.windschief.spotify.SpotifyApi;
 import com.windschief.spotify.model.AlbumItem;
 import com.windschief.spotify.model.AlbumsResponse;
+import com.windschief.spotify.model.TrackItem;
+import com.windschief.spotify.model.TracksResponse;
 import com.windschief.task.Platform;
 import com.windschief.task.Task;
 import com.windschief.task.added_item.AddedItemRepository;
@@ -46,7 +48,8 @@ public class ReleaseDetectionService {
     }
 
     @Transactional
-    public Set<String> detectNewAlbumIds(Task task) throws WebApplicationException, IOException, InterruptedException {
+    public List<TrackItem> detectNewReleaseTracks(Task task)
+            throws WebApplicationException, IOException, InterruptedException {
         if (task.getPlatform() != Platform.SPOTIFY) {
             throw new IllegalArgumentException("Unsupported platform: " + task.getPlatform());
         }
@@ -55,6 +58,13 @@ public class ReleaseDetectionService {
         }
 
         final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
+        final Set<String> newAlbumIds = detectNewAlbumIds(task, bearerToken);
+
+        return getTracksForAlbums(bearerToken, newAlbumIds);
+    }
+
+    private Set<String> detectNewAlbumIds(Task task, String bearerToken)
+            throws WebApplicationException, IOException, InterruptedException {
         final List<String> artistIds = task.getTaskItems().stream()
                 .map(TaskItem::getExternalReferenceId)
                 .toList();
@@ -100,4 +110,24 @@ public class ReleaseDetectionService {
         return releaseDateTime.isAfter(LocalDateTime.ofInstant(checkFrom, ZoneOffset.UTC))
                 || releaseDateTime.isEqual(LocalDateTime.ofInstant(checkFrom, ZoneOffset.UTC));
     }
+
+    private List<TrackItem> getTracksForAlbums(String bearerToken, Set<String> albumIds)
+            throws WebApplicationException, IOException, InterruptedException {
+        final List<TrackItem> allTracks = new ArrayList<>();
+
+        for (String albumId : albumIds) {
+            TracksResponse response = spotifyApi.getAlbumTracks(bearerToken, albumId, 50, 0);
+            while (true) {
+                allTracks.addAll(response.items());
+                if (response.next() == null) {
+                    break;
+                }
+
+                response = httpClientService.get(response.next(), bearerToken, TracksResponse.class);
+            }
+        }
+
+        return allTracks;
+    }
+
 }

@@ -1,17 +1,12 @@
 package com.windschief.releasedetection;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.spotify.SpotifyApi;
+import com.windschief.spotify.model.TrackItem;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
 
@@ -42,7 +38,7 @@ public class ReleaseRadarServiceTest {
     }
 
     @Test
-    public void givenNoTasks_whenAddNewReleases_thenNoAlbumsAreAdded()
+    public void givenNoTasks_whenAddNewReleases_thenNoTracksAreAdded()
             throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         when(panacheTaskQuery.stream()).thenReturn(Stream.of());
@@ -51,11 +47,11 @@ public class ReleaseRadarServiceTest {
         releaseRadarService.addNewReleases();
 
         // THEN
-        verify(releaseDetectionService, times(0)).detectNewAlbumIds(any(Task.class));
+        verify(releaseDetectionService, times(0)).detectNewReleaseTracks(any(Task.class));
     }
 
     @Test
-    public void givenInactiveTask_whenAddNewReleases_thenNoAlbumsAreAdded()
+    public void givenInactiveTask_whenAddNewReleases_thenNoTracksAreAdded()
             throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
@@ -67,11 +63,11 @@ public class ReleaseRadarServiceTest {
         releaseRadarService.addNewReleases();
 
         // THEN
-        verify(releaseDetectionService, times(0)).detectNewAlbumIds(any(Task.class));
+        verify(releaseDetectionService, times(0)).detectNewReleaseTracks(any(Task.class));
     }
 
     @Test
-    public void givenTaskNotDue_whenAddNewReleases_thenNoAlbumsAreAdded()
+    public void givenTaskNotDue_whenAddNewReleases_thenNoTracksAreAdded()
             throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
@@ -84,11 +80,11 @@ public class ReleaseRadarServiceTest {
         releaseRadarService.addNewReleases();
 
         // THEN
-        verify(releaseDetectionService, times(0)).detectNewAlbumIds(any(Task.class));
+        verify(releaseDetectionService, times(0)).detectNewReleaseTracks(any(Task.class));
     }
 
     @Test
-    public void givenTaskDue_whenAddNewReleases_thenAlbumsAreAdded()
+    public void givenTaskDue_whenAddNewReleases_thenTracksAreAdded()
             throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
@@ -97,20 +93,28 @@ public class ReleaseRadarServiceTest {
         task.setLastTimeExecuted(Instant.now().minusSeconds(60 * 60 * 24));
         task.setExternalDestinationId("playlistId");
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
-        when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of("album1", "album2"));
+
+        TrackItem track1 = mock(TrackItem.class);
+        TrackItem track2 = mock(TrackItem.class);
+        when(track1.uri()).thenReturn("spotify:track:track1");
+        when(track2.uri()).thenReturn("spotify:track:track2");
+        when(releaseDetectionService.detectNewReleaseTracks(task)).thenReturn(List.of(track1, track2));
         when(spotifyTokenService.getValidBearerAccessToken(task.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
 
         // THEN
-        verify(releaseDetectionService, times(1)).detectNewAlbumIds(task);
-        verify(spotifyApi, times(1)).addToPlaylist(eq("token"), eq(task.getExternalDestinationId()), anyString(),
+        verify(releaseDetectionService, times(1)).detectNewReleaseTracks(task);
+        verify(spotifyApi, times(1)).addToPlaylist(
+                eq("token"),
+                eq(task.getExternalDestinationId()),
+                eq("spotify:track:track1,spotify:track:track2"),
                 eq(null));
     }
 
     @Test
-    public void givenTaskDueWithoutNewReleases_whenAddNewReleases_thenNoAlbumsAreAdded()
+    public void givenTaskDueWithoutNewReleases_whenAddNewReleases_thenNoTracksAreAdded()
             throws WebApplicationException, IOException, InterruptedException {
         // GIVEN
         Task task = new Task();
@@ -119,14 +123,14 @@ public class ReleaseRadarServiceTest {
         task.setLastTimeExecuted(Instant.now().minusSeconds(60 * 60 * 24));
         task.setExternalDestinationId("playlistId");
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
-        when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of());
+        when(releaseDetectionService.detectNewReleaseTracks(task)).thenReturn(List.of());
         when(spotifyTokenService.getValidBearerAccessToken(task.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
 
         // THEN
-        verify(releaseDetectionService, times(1)).detectNewAlbumIds(task);
+        verify(releaseDetectionService, times(1)).detectNewReleaseTracks(task);
         verify(spotifyApi, times(0)).addToPlaylist(any(), any(), any(), any());
     }
 
@@ -144,16 +148,22 @@ public class ReleaseRadarServiceTest {
         task2.setExecutionIntervalDays(1);
         task2.setLastTimeExecuted(Instant.now().minusSeconds(60 * 60 * 24));
 
+        TrackItem track = mock(TrackItem.class);
+        when(track.uri()).thenReturn("spotify:track:track1");
+
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task1, task2));
-        when(releaseDetectionService.detectNewAlbumIds(task1)).thenThrow(new WebApplicationException("Test exception"));
-        when(releaseDetectionService.detectNewAlbumIds(task2)).thenReturn(Set.of("album1"));
+        when(releaseDetectionService.detectNewReleaseTracks(task1))
+                .thenThrow(new WebApplicationException("Test exception"));
+        when(releaseDetectionService.detectNewReleaseTracks(task2))
+                .thenReturn(List.of(track));
         when(spotifyTokenService.getValidBearerAccessToken(task2.getUserId())).thenReturn("token");
 
         // WHEN
         releaseRadarService.addNewReleases();
 
         // THEN
-        verify(spotifyApi, times(1)).addToPlaylist("token", task2.getExternalDestinationId(), "album1", null);
+        verify(spotifyApi, times(1))
+                .addToPlaylist("token", task2.getExternalDestinationId(), "spotify:track:track1", null);
     }
 
     @Test
@@ -166,12 +176,15 @@ public class ReleaseRadarServiceTest {
         task.setLastTimeExecuted(Instant.now().minusSeconds(60 * 60 * 24));
         task.setExternalDestinationId("playlistId");
 
+        TrackItem track = mock(TrackItem.class);
+        when(track.uri()).thenReturn("spotify:track:track1");
+
         when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
-        when(releaseDetectionService.detectNewAlbumIds(task)).thenReturn(Set.of("album1"));
+        when(releaseDetectionService.detectNewReleaseTracks(task)).thenReturn(List.of(track));
         when(spotifyTokenService.getValidBearerAccessToken(task.getUserId())).thenReturn("token");
 
-        doThrow(new WebApplicationException("Test exception")).when(spotifyApi).addToPlaylist(any(), any(), any(),
-                any());
+        doThrow(new WebApplicationException("Test exception"))
+                .when(spotifyApi).addToPlaylist(any(), any(), any(), any());
 
         // WHEN
         releaseRadarService.addNewReleases();

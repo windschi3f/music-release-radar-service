@@ -6,6 +6,7 @@ import com.windschief.spotify.model.SearchResponse;
 
 import com.windschief.spotify.model.SpotifyUser;
 import com.windschief.spotify.model.TokenResponse;
+import com.windschief.spotify.model.TracksResponse;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -66,6 +67,25 @@ public interface SpotifyApi {
                         @HeaderParam("Authorization") String authHeader,
                         @PathParam("id") String artistId,
                         @QueryParam("include_groups") String includeGroups,
+                        @QueryParam("limit") int limit,
+                        @QueryParam("offset") int offset) throws WebApplicationException;
+
+        /**
+         * Get an album's tracks.
+         * 
+         * @param authHeader The authorization header containing the access token.
+         * @param albumId    The Spotify ID of the album.
+         * @param limit      The maximum number of items to return. Default: 20.
+         *                   Minimum: 1. Maximum: 50.
+         * @param offset     The index of the first item to return. Default: 0.
+         * @return The album's tracks.
+         * @throws WebApplicationException if the request fails.
+         */
+        @GET
+        @Path("/albums/{id}/tracks")
+        TracksResponse getAlbumTracks(
+                        @HeaderParam("Authorization") String authHeader,
+                        @PathParam("id") String albumId,
                         @QueryParam("limit") int limit,
                         @QueryParam("offset") int offset) throws WebApplicationException;
 
