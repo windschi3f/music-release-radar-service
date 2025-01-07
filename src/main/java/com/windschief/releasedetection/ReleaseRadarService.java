@@ -10,6 +10,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.spotify.SpotifyApi;
+import com.windschief.spotify.model.PlaylistAddItemsRequest;
 import com.windschief.spotify.model.TrackItem;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
@@ -84,11 +85,12 @@ public class ReleaseRadarService {
     private void addTrackUrisToPlaylist(Task task, Set<String> trackUris, String bearerToken)
             throws WebApplicationException {
         for (int i = 0; i < trackUris.size(); i += CHUNK_SIZE) {
-            final String idsChunk = trackUris.stream()
+            final List<String> idsChunk = trackUris.stream()
                     .skip(i)
                     .limit(CHUNK_SIZE)
-                    .collect(Collectors.joining(","));
-            spotifyApi.addToPlaylist(bearerToken, task.getExternalDestinationId(), idsChunk, null);
+                    .toList();
+            final PlaylistAddItemsRequest request = new PlaylistAddItemsRequest(idsChunk, null);
+            spotifyApi.addToPlaylist(bearerToken, task.getExternalDestinationId(), request);
         }
     }
 

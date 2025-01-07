@@ -2,6 +2,7 @@ package com.windschief.spotify;
 
 import com.windschief.spotify.model.AlbumsResponse;
 import com.windschief.spotify.model.FollowingResponse;
+import com.windschief.spotify.model.PlaylistAddItemsRequest;
 import com.windschief.spotify.model.SearchResponse;
 
 import com.windschief.spotify.model.SpotifyUser;
@@ -148,10 +149,9 @@ public interface SpotifyApi {
          */
         @POST
         @Path("/playlists/{playlistId}/tracks")
-        @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+        @Consumes(MediaType.APPLICATION_JSON)
         void addToPlaylist(
                         @HeaderParam("Authorization") String authHeader,
                         @PathParam("playlistId") String playlistId,
-                        @FormParam("uris") String uris,
-                        @FormParam("position") Integer position) throws WebApplicationException;
+                        PlaylistAddItemsRequest request) throws WebApplicationException;
 }

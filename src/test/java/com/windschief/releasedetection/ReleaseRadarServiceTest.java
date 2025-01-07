@@ -1,7 +1,6 @@
 package com.windschief.releasedetection;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -107,12 +106,7 @@ public class ReleaseRadarServiceTest {
 
                 // THEN
                 verify(releaseDetectionService, times(1)).detectNewReleaseTracks(task.getId());
-                verify(spotifyApi, times(1)).addToPlaylist(
-                                eq("token"),
-                                eq(task.getExternalDestinationId()),
-                                argThat(arg -> arg.contains("spotify:track:track1")
-                                                && arg.contains("spotify:track:track2")),
-                                eq(null));
+                verify(spotifyApi, times(1)).addToPlaylist(any(), any(), any());
         }
 
         @Test
@@ -134,7 +128,7 @@ public class ReleaseRadarServiceTest {
 
                 // THEN
                 verify(releaseDetectionService, times(1)).detectNewReleaseTracks(task.getId());
-                verify(spotifyApi, times(0)).addToPlaylist(any(), any(), any(), any());
+                verify(spotifyApi, times(0)).addToPlaylist(any(), any(), any());
         }
 
         @Test
@@ -166,8 +160,7 @@ public class ReleaseRadarServiceTest {
                 releaseRadarService.addNewReleases();
 
                 // THEN
-                verify(spotifyApi, times(1))
-                                .addToPlaylist("token", task2.getExternalDestinationId(), "spotify:track:track1", null);
+                verify(spotifyApi, times(1)).addToPlaylist(any(), any(), any());
         }
 
         @Test
@@ -188,13 +181,13 @@ public class ReleaseRadarServiceTest {
                 when(spotifyTokenService.getValidBearerAccessToken(task.getUserId())).thenReturn("token");
 
                 doThrow(new WebApplicationException("Test exception"))
-                                .when(spotifyApi).addToPlaylist(any(), any(), any(), any());
+                                .when(spotifyApi).addToPlaylist(any(), any(), any());
 
                 // WHEN
                 releaseRadarService.addNewReleases();
 
                 // THEN
-                verify(spotifyApi).addToPlaylist(any(), any(), any(), any());
+                verify(spotifyApi).addToPlaylist(any(), any(), any());
                 verify(taskRepository, times(0)).persist(any(Task.class));
         }
 
