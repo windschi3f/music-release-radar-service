@@ -78,7 +78,7 @@ public class ReleaseRadarService {
             updateTaskExecutionTime(task.getId());
         } catch (Exception e) {
             Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
-                    task.getId(), task.getUserId(), task.getExternalDestinationId()), e);
+                    task.getId(), task.getUserId(), task.getPlaylistId()), e);
         }
     }
 
@@ -90,7 +90,7 @@ public class ReleaseRadarService {
                     .limit(CHUNK_SIZE)
                     .toList();
             final PlaylistAddItemsRequest request = new PlaylistAddItemsRequest(idsChunk, null);
-            spotifyApi.addToPlaylist(bearerToken, task.getExternalDestinationId(), request);
+            spotifyApi.addToPlaylist(bearerToken, task.getPlaylistId(), request);
         }
     }
 

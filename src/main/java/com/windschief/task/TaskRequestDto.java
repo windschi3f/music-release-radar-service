@@ -3,22 +3,24 @@ package com.windschief.task;
 import java.time.Instant;
 
 public record TaskRequestDto(
+        String name,
         Platform platform,
         int executionIntervalDays,
         Instant checkFrom,
         boolean active,
-        String externalDestinationId,
+        String playlistId,
         String refreshToken) {
     public static Task toTask(TaskRequestDto taskRequestDto) {
         if (taskRequestDto == null) {
             throw new IllegalArgumentException("TaskRequestDto cannot be null");
         }
         Task task = new Task();
+        task.setName(taskRequestDto.name());
         task.setPlatform(taskRequestDto.platform());
         task.setExecutionIntervalDays(taskRequestDto.executionIntervalDays());
         task.setCheckFrom(taskRequestDto.checkFrom());
         task.setActive(taskRequestDto.active());
-        task.setExternalDestinationId(taskRequestDto.externalDestinationId());
+        task.setPlaylistId(taskRequestDto.playlistId());
         return task;
     }
 
@@ -26,10 +28,11 @@ public record TaskRequestDto(
         if (dto == null || task == null) {
             throw new IllegalArgumentException("Task and TaskRequestDto cannot be null");
         }
+        task.setName(dto.name());
         task.setPlatform(dto.platform());
         task.setExecutionIntervalDays(dto.executionIntervalDays());
         task.setCheckFrom(dto.checkFrom());
         task.setActive(dto.active());
-        task.setExternalDestinationId(dto.externalDestinationId());
+        task.setPlaylistId(dto.playlistId());
     }
 }

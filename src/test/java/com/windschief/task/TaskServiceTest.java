@@ -96,7 +96,7 @@ class TaskServiceTest {
     @Test
     void givenValidTaskRequest_whenCreateTaskIsCalled_thenTaskIsCreated() {
         // GIVEN
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 "refreshToken");
 
         doAnswer(invocation -> {
@@ -117,7 +117,7 @@ class TaskServiceTest {
     @Test
     void givenMissingRefreshToken_whenCreateTaskIsCalled_thenExceptionIsThrown() {
         // GIVEN
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 null);
 
         // WHEN
@@ -136,7 +136,7 @@ class TaskServiceTest {
         existingTask.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 "refreshToken");
 
         // WHEN
@@ -146,7 +146,7 @@ class TaskServiceTest {
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(Platform.SPOTIFY, existingTask.getPlatform());
         assertEquals(7, existingTask.getExecutionIntervalDays());
-        assertEquals("123", existingTask.getExternalDestinationId());
+        assertEquals("123", existingTask.getPlaylistId());
         assertTrue(existingTask.isActive());
     }
 
@@ -158,7 +158,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(task);
         doThrow(new NotFoundException()).when(taskAccess).checkAccess(task);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto(Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 "refreshToken");
 
         // WHEN / THEN

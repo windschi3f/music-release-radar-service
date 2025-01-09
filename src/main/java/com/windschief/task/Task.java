@@ -27,13 +27,13 @@ public class Task {
 
     @Enumerated(EnumType.STRING)
     private Platform platform;
-
+    private String name;
     private int executionIntervalDays = 7;
     private Instant lastTimeExecuted;
     private Instant checkFrom;
     private boolean active;
     private String userId;
-    private String externalDestinationId;
+    private String playlistId;
 
     public boolean isDue() {
         return lastTimeExecuted == null ||
@@ -68,6 +68,14 @@ public class Task {
 
     public void setPlatform(Platform platform) {
         this.platform = platform;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getExecutionIntervalDays() {
@@ -110,11 +118,11 @@ public class Task {
         this.userId = userId;
     }
 
-    public String getExternalDestinationId() {
-        return externalDestinationId;
+    public String getPlaylistId() {
+        return playlistId;
     }
 
-    public void setExternalDestinationId(String externalDestinationId) {
-        this.externalDestinationId = externalDestinationId;
+    public void setPlaylistId(String playlistId) {
+        this.playlistId = playlistId;
     }
 }

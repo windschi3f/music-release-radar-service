@@ -93,7 +93,7 @@ public class ReleaseRadarServiceTest {
                 task.setActive(true);
                 task.setExecutionIntervalDays(1);
                 task.setLastTimeExecuted(Instant.now().minusSeconds(60 * 60 * 24));
-                task.setExternalDestinationId("playlistId");
+                task.setPlaylistId("playlistId");
                 when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
 
                 TrackItem track1 = createTrackItem("spotify:track:track1");
@@ -118,7 +118,7 @@ public class ReleaseRadarServiceTest {
                 task.setActive(true);
                 task.setExecutionIntervalDays(1);
                 task.setLastTimeExecuted(Instant.now().minusSeconds(60 * 60 * 24));
-                task.setExternalDestinationId("playlistId");
+                task.setPlaylistId("playlistId");
                 when(panacheTaskQuery.stream()).thenReturn(Stream.of(task));
                 when(releaseDetectionService.detectNewReleaseTracks(task.getId())).thenReturn(List.of());
                 when(spotifyTokenService.getValidBearerAccessToken(task.getUserId())).thenReturn("token");
@@ -172,7 +172,7 @@ public class ReleaseRadarServiceTest {
                 task.setActive(true);
                 task.setExecutionIntervalDays(1);
                 task.setLastTimeExecuted(Instant.now().minusSeconds(60 * 60 * 24));
-                task.setExternalDestinationId("playlistId");
+                task.setPlaylistId("playlistId");
 
                 TrackItem track = createTrackItem("spotify:track:track1");
 
