@@ -6,7 +6,6 @@ import jakarta.inject.Inject;
 
 import com.windschief.task.Platform;
 import com.windschief.task.Task;
-import com.windschief.task.TaskItemRepository;
 import com.windschief.task.TaskRepository;
 
 import io.quarkus.test.TestTransaction;

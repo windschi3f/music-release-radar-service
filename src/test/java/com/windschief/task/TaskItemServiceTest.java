@@ -7,6 +7,7 @@ import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 
 import com.windschief.task.item.TaskItem;
+import com.windschief.task.item.TaskItemRepository;
 import com.windschief.task.item.TaskItemRequestDto;
 import com.windschief.task.item.TaskItemResponseDto;
 import com.windschief.task.item.TaskItemService;

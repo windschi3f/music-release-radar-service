@@ -6,7 +6,6 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import com.windschief.task.Task;
-import com.windschief.task.TaskItemRepository;
 import com.windschief.task.TaskRepository;
 import com.windschief.task.TaskAccess;
 
