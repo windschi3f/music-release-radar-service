@@ -61,6 +61,30 @@ public class TaskItemService implements TaskItemApi {
 
     @Override
     @Transactional
+    public Response replaceTaskItems(Long taskId, List<TaskItemRequestDto> taskItemRequestDtos) {
+        Task task = taskRepository.findById(taskId);
+        taskAccess.checkAccess(task);
+        
+        taskItemRepository.deleteByTaskId(taskId);
+        
+        final List<TaskItem> taskItems = taskItemRequestDtos.stream()
+            .map(dto -> {
+                TaskItem taskItem = TaskItemRequestDto.toTaskItem(dto);
+                taskItem.setTask(task);
+                return taskItem;
+            })
+            .toList();
+            
+        taskItemRepository.persist(taskItems);
+        
+        return Response.ok(taskItems.stream()
+            .map(TaskItemResponseDto::from)
+            .toList())
+            .build();
+    }
+
+    @Override
+    @Transactional
     public Response deleteTaskItem(Long taskId, Long taskItemId) {
         Task task = taskRepository.findById(taskId);
 

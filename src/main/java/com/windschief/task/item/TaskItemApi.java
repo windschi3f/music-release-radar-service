@@ -6,6 +6,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -46,6 +47,20 @@ public interface TaskItemApi {
         Response createTaskItems(
                         @Parameter(description = "ID of the task", required = true) @PathParam("taskId") Long taskId,
                         @Parameter(description = "Task items to be created", required = true, schema = @Schema(implementation = TaskItemRequestDto.class, type = SchemaType.ARRAY)) List<TaskItemRequestDto> taskItemRequestDtos);
+
+        @PUT
+        @Operation(summary = "Replace all task items")
+        @APIResponses(value = {
+                @APIResponse(responseCode = "200", description = "Task items replaced successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskItemResponseDto.class, type = SchemaType.ARRAY))),
+                @APIResponse(responseCode = "400", description = "Invalid input"),
+                @APIResponse(responseCode = "401", description = "Unauthorized"),
+                @APIResponse(responseCode = "404", description = "Task not found")
+        })
+        @Authenticated
+        Response replaceTaskItems(
+                @Parameter(description = "ID of the task", required = true) 
+                @PathParam("taskId") Long taskId,
+                @Parameter(description = "New list of task items", required = true, schema = @Schema(implementation = TaskItemRequestDto.class, type = SchemaType.ARRAY)) List<TaskItemRequestDto> taskItemRequestDtos);
 
         @DELETE
         @Path("/{taskItemId}")
