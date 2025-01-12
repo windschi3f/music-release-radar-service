@@ -132,3 +132,18 @@ docker rm music-release-radar-service postgres-db
 Easily start your REST Web Services
 
 [Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+
+## Release
+
+```bash
+git push -f
+mvn release:prepare
+mvn release:perform
+```
+
+- To undo the prepare step in case of errors delete the commits and execute:
+```bash
+mvn release:clean
+git tag -d {version}
+git push origin :refs/tags/{version}
+```
