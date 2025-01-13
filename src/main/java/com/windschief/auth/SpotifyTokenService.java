@@ -43,10 +43,20 @@ public class SpotifyTokenService {
     @Transactional
     public void updateStoredToken(String userId, String accessToken, String refreshToken) {
         SpotifyToken storedToken = tokenRepository.findByUserId(userId);
-        SpotifyToken newToken = (storedToken != null)
-                ? storedToken.withNewAccessToken(accessToken, Instant.now().plusSeconds(3000))
-                : new SpotifyToken(userId, accessToken, refreshToken, Instant.now().plusSeconds(3000));
-        tokenRepository.persist(newToken);
+
+        if (storedToken == null) {
+            SpotifyToken newToken = new SpotifyToken(userId, accessToken, refreshToken,
+                Instant.now().plusSeconds(3000));
+            tokenRepository.persist(newToken);
+        } else {
+            if (!accessToken.equals(storedToken.getAccessToken())) {
+                storedToken.setAccessToken(accessToken);
+                storedToken.setExpiresAt(Instant.now().plusSeconds(3000));
+            }
+            if (!refreshToken.equals(storedToken.getRefreshToken())) {
+                storedToken.setRefreshToken(refreshToken);
+            }
+        }
     }
 
     @Transactional
