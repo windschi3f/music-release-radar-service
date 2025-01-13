@@ -57,7 +57,7 @@ public class TaskService implements TaskApi {
 
     @Override
     @Transactional
-    public TaskResponseDto createTask(TaskRequestDto taskRequestDto) {
+    public Response createTask(TaskRequestDto taskRequestDto) {
         if (taskRequestDto.refreshToken() == null) {
             throw new IllegalArgumentException("refreshToken is required");
         }
@@ -72,7 +72,9 @@ public class TaskService implements TaskApi {
                 securityIdentity.getAttribute("spotifyToken"),
                 taskRequestDto.refreshToken());
 
-        return TaskResponseDto.from(task);
+        return Response.status(Response.Status.CREATED)
+            .entity(TaskResponseDto.from(task))
+            .build();
     }
 
     @Override

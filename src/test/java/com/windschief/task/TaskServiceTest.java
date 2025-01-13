@@ -106,7 +106,7 @@ class TaskServiceTest {
         }).when(taskRepository).persist(any(Task.class));
 
         // WHEN
-        TaskResponseDto result = taskService.createTask(taskRequestDto);
+        Response result = taskService.createTask(taskRequestDto);
 
         // THEN
         assertNotNull(result);

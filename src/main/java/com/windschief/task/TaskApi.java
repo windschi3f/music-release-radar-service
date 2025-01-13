@@ -61,7 +61,7 @@ public interface TaskApi {
         @Operation(summary = "Create a new task")
         @APIResponse(responseCode = "201", description = "Task created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskResponseDto.class)))
         @Authenticated
-        TaskResponseDto createTask(
+        Response createTask(
                         @Parameter(description = "Task to be created", required = true, schema = @Schema(implementation = TaskRequestDto.class)) TaskRequestDto taskRequestDto);
 
         @PUT
