@@ -1,6 +1,8 @@
 package com.windschief.auth;
 
 import java.time.Instant;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -8,7 +10,9 @@ import jakarta.persistence.Id;
 public class SpotifyToken {
     @Id
     private String userId;
+    @Column(length = 2048)
     private String accessToken;
+    @Column(length = 2048)
     private String refreshToken;
     private Instant expiresAt;
 
