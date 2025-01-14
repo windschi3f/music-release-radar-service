@@ -25,7 +25,7 @@ public class SpotifyTokenService {
         this.tokenRepository = tokenRepository;
         this.spotifyConfig = spotifyConfig;
         this.spotifyAccountsApi = spotifyAccountsApi;
-    }
+    }   
 
     @Transactional
     public String getValidBearerAccessToken(String userId) throws WebApplicationException {
@@ -35,8 +35,10 @@ public class SpotifyTokenService {
         }
 
         if (token.getExpiresAt().isBefore(Instant.now()) && token.getRefreshToken() != null) {
-            refreshToken(token);
+            final TokenResponse tokenResponse = refreshToken(token);
+            updateStoredToken(userId, tokenResponse.access_token(), tokenResponse.refresh_token());
         }
+
         return "Bearer " + token.getAccessToken();
     }
 
@@ -53,26 +55,20 @@ public class SpotifyTokenService {
                 storedToken.setAccessToken(accessToken);
                 storedToken.setExpiresAt(Instant.now().plusSeconds(3000));
             }
-            if (!refreshToken.equals(storedToken.getRefreshToken())) {
+            if (refreshToken != null && !refreshToken.equals(storedToken.getRefreshToken())) {
                 storedToken.setRefreshToken(refreshToken);
             }
         }
     }
 
-    @Transactional
-    void refreshToken(SpotifyToken token) throws WebApplicationException {
+    TokenResponse refreshToken(SpotifyToken token) throws WebApplicationException {
         String basicAuth = "Basic " + Base64.getEncoder()
                 .encodeToString((spotifyConfig.clientId() + ":" + spotifyConfig.clientSecret()).getBytes());
 
-        TokenResponse response = spotifyAccountsApi.refreshToken(
+        return spotifyAccountsApi.refreshToken(
                 basicAuth,
                 "refresh_token",
                 token.getRefreshToken(),
                 spotifyConfig.clientId());
-
-        SpotifyToken newToken = token.withNewAccessToken(
-                response.access_token(),
-                Instant.now().plusSeconds(response.expires_in()));
-        tokenRepository.persist(newToken);
     }
 }
