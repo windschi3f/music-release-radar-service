@@ -134,8 +134,8 @@ public interface SpotifyApi {
         TokenResponse refreshToken(
                         @HeaderParam("Authorization") String basicAuth,
                         @FormParam("grant_type") String grantType,
-                        @FormParam("refresh_token") String refreshToken) throws WebApplicationException;
-
+                        @FormParam("refresh_token") String refreshToken,
+                        @FormParam("client_id") String clientId) throws WebApplicationException;
         /**
          * Adds items to a Spotify playlist.
          *

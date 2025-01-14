@@ -5,7 +5,7 @@ import java.util.Base64;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
-import com.windschief.spotify.SpotifyApi;
+import com.windschief.spotify.SpotifyAccountsApi;
 import com.windschief.spotify.model.TokenResponse;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -17,14 +17,14 @@ import jakarta.ws.rs.WebApplicationException;
 public class SpotifyTokenService {
     private final SpotifyTokenRepository tokenRepository;
     private final SpotifyConfig spotifyConfig;
-    private final SpotifyApi spotifyApi;
+    private final SpotifyAccountsApi spotifyAccountsApi;
 
     @Inject
     public SpotifyTokenService(SpotifyTokenRepository tokenRepository, SpotifyConfig spotifyConfig,
-            @RestClient SpotifyApi spotifyApi) {
+            @RestClient SpotifyAccountsApi spotifyAccountsApi) {
         this.tokenRepository = tokenRepository;
         this.spotifyConfig = spotifyConfig;
-        this.spotifyApi = spotifyApi;
+        this.spotifyAccountsApi = spotifyAccountsApi;
     }
 
     @Transactional
@@ -64,10 +64,11 @@ public class SpotifyTokenService {
         String basicAuth = "Basic " + Base64.getEncoder()
                 .encodeToString((spotifyConfig.clientId() + ":" + spotifyConfig.clientSecret()).getBytes());
 
-        TokenResponse response = spotifyApi.refreshToken(
+        TokenResponse response = spotifyAccountsApi.refreshToken(
                 basicAuth,
                 "refresh_token",
-                token.getRefreshToken());
+                token.getRefreshToken(),
+                spotifyConfig.clientId());
 
         SpotifyToken newToken = token.withNewAccessToken(
                 response.access_token(),
