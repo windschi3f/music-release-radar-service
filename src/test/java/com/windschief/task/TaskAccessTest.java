@@ -10,20 +10,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.security.identity.SecurityIdentity;
-import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 
-@QuarkusTest
 class TaskAccessTest {
     private final SecurityIdentity securityIdentity = mock(SecurityIdentity.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
     private final Principal principal = mock(Principal.class);
-    private TaskAccess taskAccess;
+    private final TaskAccess taskAccess = new TaskAccess(securityIdentity, taskRepository);
 
     @BeforeEach
     void setup() {
-        taskAccess = new TaskAccess(securityIdentity, taskRepository);
         when(securityIdentity.getPrincipal()).thenReturn(principal);
         when(principal.getName()).thenReturn("testUser");
     }

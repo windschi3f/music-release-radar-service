@@ -16,6 +16,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.windschief.auth.SpotifyTokenException;
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.client.HttpClientService;
 import com.windschief.spotify.SpotifyApi;
@@ -44,7 +45,7 @@ public class ReleaseDetectionServiceTest {
                         addedItemRepository, spotifyTokenService, httpClientService, taskRepository);
 
         @BeforeEach
-        void setup() {
+        void setup() throws WebApplicationException, SpotifyTokenException {
                 when(spotifyTokenService.getValidBearerAccessToken("userId")).thenReturn(ACCESS_TOKEN);
         }
 
@@ -85,7 +86,7 @@ public class ReleaseDetectionServiceTest {
 
         @Test
         void givenNewRelease_whenDetectNewReleaseTracks_thenDetectNewReleases()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = mock(Task.class);
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -127,7 +128,7 @@ public class ReleaseDetectionServiceTest {
 
         @Test
         void givenAlreadyAddedNewRelease_whenDetectNewReleaseTracks_thenDetectNoNewReleases()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = mock(Task.class);
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -168,7 +169,7 @@ public class ReleaseDetectionServiceTest {
 
         @Test
         void givenReleaseBeforeCheckFrom_whenDetectNewReleaseTracks_thenDetectNoNewReleases()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = mock(Task.class);
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -207,7 +208,7 @@ public class ReleaseDetectionServiceTest {
 
         @Test
         void givenMultiplePages_whenDetectNewReleaseTracks_thenDetectNewReleases()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = mock(Task.class);
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
@@ -253,7 +254,7 @@ public class ReleaseDetectionServiceTest {
 
         @Test
         void givenDifferentDatePrecisions_whenDetectNewReleaseTracks_thenHandleCorrectly()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = mock(Task.class);
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);

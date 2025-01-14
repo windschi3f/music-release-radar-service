@@ -9,7 +9,6 @@ import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +26,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@QuarkusTest
 class TaskServiceTest {
     private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
@@ -111,7 +109,7 @@ class TaskServiceTest {
         // THEN
         assertNotNull(result);
         verify(taskRepository).persist(any(Task.class));
-        verify(spotifyTokenService).updateStoredToken("testUser", "token", "refreshToken");
+        verify(spotifyTokenService).createOrUpdateRefreshToken("testUser", "refreshToken");
     }
 
     @Test

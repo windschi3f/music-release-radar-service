@@ -13,8 +13,6 @@ import com.windschief.task.item.TaskItemResponseDto;
 import com.windschief.task.item.TaskItemService;
 import com.windschief.task.item.TaskItemType;
 
-import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,17 +23,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@QuarkusTest
 class TaskItemServiceTest {
     private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
     private final TaskItemRepository taskItemRepository = mock(TaskItemRepository.class);
-    private TaskItemService taskItemService;
-
-    @BeforeEach
-    public void setup() {
-        taskItemService = new TaskItemService(taskAccess, taskRepository, taskItemRepository);
-    }
+    private final TaskItemService taskItemService = new TaskItemService(taskAccess, taskRepository, taskItemRepository);
 
     @Test
     @SuppressWarnings("unchecked")

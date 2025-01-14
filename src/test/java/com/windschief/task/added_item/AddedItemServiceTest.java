@@ -8,28 +8,20 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.windschief.task.Task;
 import com.windschief.task.TaskAccess;
 import com.windschief.task.TaskRepository;
 
-import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 
-@QuarkusTest
 class AddedItemServiceTest {
     private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
     private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
-    private AddedItemService addedItemService;
-
-    @BeforeEach
-    void setup() {
-        addedItemService = new AddedItemService(taskAccess, taskRepository, addedItemRepository);
-    }
+    private final AddedItemService addedItemService = new AddedItemService(taskAccess, taskRepository, addedItemRepository);
 
     @Test
     @SuppressWarnings("unchecked")

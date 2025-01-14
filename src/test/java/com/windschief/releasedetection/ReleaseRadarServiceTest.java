@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.windschief.auth.SpotifyTokenException;
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.spotify.SpotifyApi;
 import com.windschief.spotify.model.TrackItem;
@@ -40,7 +41,7 @@ public class ReleaseRadarServiceTest {
 
         @Test
         public void givenNoTasks_whenAddNewReleases_thenNoTracksAreAdded()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 when(panacheTaskQuery.stream()).thenReturn(Stream.of());
 
@@ -53,7 +54,7 @@ public class ReleaseRadarServiceTest {
 
         @Test
         public void givenInactiveTask_whenAddNewReleases_thenNoTracksAreAdded()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = new Task();
                 task.setActive(false);
@@ -69,7 +70,7 @@ public class ReleaseRadarServiceTest {
 
         @Test
         public void givenTaskNotDue_whenAddNewReleases_thenNoTracksAreAdded()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = new Task();
                 task.setActive(true);
@@ -86,7 +87,7 @@ public class ReleaseRadarServiceTest {
 
         @Test
         public void givenTaskDue_whenAddNewReleases_thenTracksAreAdded()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = new Task();
                 task.setId(1L);
@@ -111,7 +112,7 @@ public class ReleaseRadarServiceTest {
 
         @Test
         public void givenTaskDueWithoutNewReleases_whenAddNewReleases_thenNoTracksAreAdded()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = new Task();
                 task.setId(1L);
@@ -133,7 +134,7 @@ public class ReleaseRadarServiceTest {
 
         @Test
         public void givenTaskThrowsException_whenAddNewReleases_thenOtherTasksAreStillProcessed()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task1 = new Task();
                 task1.setId(1L);
@@ -165,7 +166,7 @@ public class ReleaseRadarServiceTest {
 
         @Test
         public void givenSpotifyApiThrowsException_whenAddNewReleases_thenErrorIsHandled()
-                        throws WebApplicationException, IOException, InterruptedException {
+                        throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
                 // GIVEN
                 Task task = new Task();
                 task.setId(1L);
