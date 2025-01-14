@@ -67,9 +67,8 @@ public class TaskService implements TaskApi {
         taskRepository.persist(task);
 
         final SecurityIdentity securityIdentity = taskAccess.getSecurityIdentity();
-        spotifyTokenService.updateStoredToken(
+        spotifyTokenService.createOrUpdateRefreshToken(
                 securityIdentity.getPrincipal().getName(),
-                securityIdentity.getAttribute("spotifyToken"),
                 taskRequestDto.refreshToken());
 
         return Response.status(Response.Status.CREATED)

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import com.windschief.auth.SpotifyTokenException;
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.client.HttpClientService;
 import com.windschief.spotify.SpotifyApi;
@@ -52,7 +53,7 @@ public class ReleaseDetectionService {
     }
 
     public List<TrackItem> detectNewReleaseTracks(long taskId)
-            throws WebApplicationException, IOException, InterruptedException {
+            throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
         final Task task = loadAndValidateTask(taskId);
 
         final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());

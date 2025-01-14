@@ -28,36 +28,32 @@ public class SpotifyTokenService {
     }   
 
     @Transactional
-    public String getValidBearerAccessToken(String userId) throws WebApplicationException {
+    public String getValidBearerAccessToken(String userId) throws WebApplicationException, SpotifyTokenException {
         SpotifyToken token = tokenRepository.findByUserId(userId);
-        if (token == null) {
-            return null;
+        if (token == null || token.getRefreshToken() == null) {
+            throw new SpotifyTokenException("No refresh token found for user " + userId);
         }
 
-        if (token.getExpiresAt().isBefore(Instant.now()) && token.getRefreshToken() != null) {
+        if (token.getExpiresAt().isBefore(Instant.now())) {
             final TokenResponse tokenResponse = refreshToken(token);
-            updateStoredToken(userId, tokenResponse.access_token(), tokenResponse.refresh_token());
+            final Instant expiresAt = Instant.now().plusSeconds(tokenResponse.expires_in() - 60);
+            
+            token.setAccessToken(tokenResponse.access_token());
+            token.setExpiresAt(expiresAt);
         }
 
         return "Bearer " + token.getAccessToken();
     }
 
     @Transactional
-    public void updateStoredToken(String userId, String accessToken, String refreshToken) {
+    public void createOrUpdateRefreshToken(String userId, String refreshToken) {
         SpotifyToken storedToken = tokenRepository.findByUserId(userId);
 
         if (storedToken == null) {
-            SpotifyToken newToken = new SpotifyToken(userId, accessToken, refreshToken,
-                Instant.now().plusSeconds(3000));
+            SpotifyToken newToken = new SpotifyToken(userId, null, refreshToken, Instant.now());
             tokenRepository.persist(newToken);
         } else {
-            if (!accessToken.equals(storedToken.getAccessToken())) {
-                storedToken.setAccessToken(accessToken);
-                storedToken.setExpiresAt(Instant.now().plusSeconds(3000));
-            }
-            if (refreshToken != null && !refreshToken.equals(storedToken.getRefreshToken())) {
-                storedToken.setRefreshToken(refreshToken);
-            }
+            storedToken.setRefreshToken(refreshToken);
         }
     }
 
