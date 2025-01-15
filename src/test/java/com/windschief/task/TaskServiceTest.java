@@ -136,6 +136,7 @@ class TaskServiceTest {
         Task existingTask = new Task();
         existingTask.setUserId("testUser");
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
+        when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(false);
 
         TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 "refreshToken");
@@ -167,6 +168,21 @@ class TaskServiceTest {
     }
 
     @Test
+    void givenProcessingTask_whenUpdateTask_thenThrowException() {
+        // GIVEN
+        Long taskId = 1L;
+        Task task = new Task();
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(true);
+
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
+                "refreshToken");
+
+        // WHEN / THEN
+        assertThrows(IllegalStateException.class, () -> taskService.updateTask(taskId, taskRequestDto));
+    }
+
+    @Test
     void givenExistingTask_whenDeleteTask_thenTaskIsDeletedAndResponseIsNoContent() {
         // GIVEN
         Long taskId = 1L;
@@ -176,6 +192,8 @@ class TaskServiceTest {
         String userId = "testUser";
         when(taskAccess.getCurrentUserId()).thenReturn(userId);
 
+        when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(false);
+
         // WHEN
         Response response = taskService.deleteTask(taskId);
 
@@ -183,5 +201,17 @@ class TaskServiceTest {
         verify(taskRepository).delete(task);
         verify(addedItemRepository).deleteByTaskIdAndUserId(taskId, userId);
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void givenProcessingTask_whenDeleteTask_thenThrowException() {
+        // GIVEN
+        Long taskId = 1L;
+        Task task = new Task();
+        when(taskRepository.findById(taskId)).thenReturn(task);
+        when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(true);
+
+        // WHEN / THEN
+        assertThrows(IllegalStateException.class, () -> taskService.deleteTask(taskId));
     }
 }

@@ -88,6 +88,10 @@ public class TaskService implements TaskApi {
 
         taskAccess.checkAccess(task);
 
+        if (releaseRadarService.isTaskProcessing(id)) {
+            throw new IllegalStateException("Task execution is in progress");
+        }
+
         TaskRequestDto.updateTask(task, taskRequestDto);
         return Response.ok(taskMapper.toDto(task)).build();
     }
@@ -98,6 +102,10 @@ public class TaskService implements TaskApi {
         Task task = taskRepository.findById(id);
 
         taskAccess.checkAccess(task);
+
+        if (releaseRadarService.isTaskProcessing(id)) {
+            throw new IllegalStateException("Task execution is in progress");
+        }
 
         addedItemRepository.deleteByTaskIdAndUserId(id, taskAccess.getCurrentUserId());
         taskRepository.delete(task); // cascades to task items
