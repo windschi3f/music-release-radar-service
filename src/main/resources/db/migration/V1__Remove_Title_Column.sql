@@ -1,0 +1,1 @@
+ALTER TABLE added_item DROP COLUMN title;

@@ -42,18 +42,16 @@ class AddedItemServiceTest {
 
         // THEN
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        List<AddedItemResponseDto> items = (List<AddedItemResponseDto>) response.getEntity();
+        List<AddedItem> items = (List<AddedItem>) response.getEntity();
         assertEquals(1, items.size());
-        assertEquals("spotify:track:123", items.get(0).externalId());
+        assertEquals("spotify:track:123", items.get(0).getExternalId());
     }
 
     @Test
     void givenTaskAccessException_whenGetAddedItems_thenExceptionIsThrown() {
         // GIVEN
         Long taskId = 1L;
-        Task task = null;
-        when(taskRepository.findById(taskId)).thenReturn(task);
-        doThrow(new NotFoundException()).when(taskAccess).checkAccess(task);
+        doThrow(new NotFoundException()).when(taskAccess).checkAccess(taskId);
 
         // WHEN / THEN
         assertThrows(NotFoundException.class, () -> addedItemService.getAddedItems(taskId));

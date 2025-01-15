@@ -51,7 +51,6 @@ class AddedItemRepositoryTest {
         AddedItem addedItem = new AddedItem();
         addedItem.setTask(task);
         addedItem.setExternalId("spotify:track:123");
-        addedItem.setTitle("Test Track");
         addedItem.setAddedAt(Instant.now());
         addedItemRepository.persist(addedItem);
 
@@ -61,7 +60,6 @@ class AddedItemRepositoryTest {
         // THEN
         assertEquals(1, foundItems.size());
         assertEquals("spotify:track:123", foundItems.get(0).getExternalId());
-        assertEquals("Test Track", foundItems.get(0).getTitle());
     }
 
     @Test

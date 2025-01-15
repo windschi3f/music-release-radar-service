@@ -2,6 +2,7 @@ package com.windschief.task.added_item;
 
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.windschief.task.Task;
 
 import jakarta.persistence.Entity;
@@ -20,11 +21,10 @@ public class AddedItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
+    @JsonIgnore
     private Task task;
 
     private String externalId;
-
-    private String title;
 
     private Instant addedAt;
 
@@ -50,14 +50,6 @@ public class AddedItem {
 
     public void setExternalId(String externalId) {
         this.externalId = externalId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public Instant getAddedAt() {
