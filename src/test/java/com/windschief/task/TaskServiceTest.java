@@ -52,7 +52,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenExistingTasks_whenGetTasksIsCalled_thenAllUserTasksAreReturned() {
+    void givenExistingTasks_whenGetTasks_thenAllUserTasksAreReturned() {
         // GIVEN
         Task task1 = new Task();
         Task task2 = new Task();
@@ -67,7 +67,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenExistingTask_whenGetTaskIsCalled_thenTaskIsReturned() {
+    void givenExistingTask_whenGetTask_thenTaskIsReturned() {
         // GIVEN
         Long taskId = 1L;
         Task task = new Task();
@@ -82,7 +82,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenTaskAccessException_whenGetTaskIsCalled_thenThrowException() {
+    void givenTaskAccessException_whenGetTask_thenThrowException() {
         // GIVEN
         Long taskId = 1L;
         Task task = new Task();
@@ -95,7 +95,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenValidTaskRequest_whenCreateTaskIsCalled_thenTaskIsCreated() {
+    void givenValidTaskRequest_whenCreateTask_thenTaskIsCreated() {
         // GIVEN
         TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 "refreshToken");
@@ -116,7 +116,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenMissingRefreshToken_whenCreateTaskIsCalled_thenExceptionIsThrown() {
+    void givenMissingRefreshToken_whenCreateTask_thenExceptionIsThrown() {
         // GIVEN
         TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
                 null);
@@ -130,7 +130,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenExistingTask_whenUpdateTaskIsCalled_thenTaskIsUpdated() {
+    void givenExistingTask_whenUpdateTask_thenTaskIsUpdated() {
         // GIVEN
         Long taskId = 1L;
         Task existingTask = new Task();
@@ -152,7 +152,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenTaskAccessException_whenUpdateTaskIsCalled_thenThrowException() {
+    void givenTaskAccessException_whenUpdateTask_thenThrowException() {
         // GIVEN
         Long taskId = 1L;
         Task task = null;
@@ -167,7 +167,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void givenExistingTask_whenDeleteTaskIsCalled_thenTaskIsDeletedAndResponseIsNoContent() {
+    void givenExistingTask_whenDeleteTask_thenTaskIsDeletedAndResponseIsNoContent() {
         // GIVEN
         Long taskId = 1L;
         Task task = new Task();
