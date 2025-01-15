@@ -33,8 +33,9 @@ class TaskServiceTest {
     private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
     private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
     private final ReleaseRadarService releaseRadarService = mock(ReleaseRadarService.class);
+    private final TaskMapper taskMapper = mock(TaskMapper.class);
     private final TaskService taskService = new TaskService(taskAccess, taskRepository, addedItemRepository,
-            spotifyTokenService, releaseRadarService);
+            spotifyTokenService, releaseRadarService, taskMapper);
 
     @BeforeEach
     public void setup() {

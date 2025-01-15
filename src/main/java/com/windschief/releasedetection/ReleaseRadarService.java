@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -19,10 +21,12 @@ import com.windschief.task.added_item.AddedItemRepository;
 
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 
+@ApplicationScoped
 public class ReleaseRadarService {
     private static final int CHUNK_SIZE = 100;
 
@@ -31,6 +35,8 @@ public class ReleaseRadarService {
     private final SpotifyTokenService spotifyTokenService;
     private final SpotifyApi spotifyApi;
     private final AddedItemRepository addedItemRepository;
+
+    private final ConcurrentMap<Long, Boolean> processingTasks = new ConcurrentHashMap<>();
 
     @Inject
     public ReleaseRadarService(
@@ -63,8 +69,11 @@ public class ReleaseRadarService {
     }
 
     public void execute(Task task) {
+        final long taskId = task.getId();
+        processingTasks.put(taskId, true);
+
         try {
-            final Set<String> newReleaseTrackUris = releaseDetectionService.detectNewReleaseTracks(task.getId())
+            final Set<String> newReleaseTrackUris = releaseDetectionService.detectNewReleaseTracks(taskId)
                     .stream()
                     .map(TrackItem::uri)
                     .collect(Collectors.toSet());
@@ -82,7 +91,13 @@ public class ReleaseRadarService {
         } catch (Exception e) {
             Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
                     task.getId(), task.getUserId(), task.getPlaylistId()), e);
+        } finally {
+            processingTasks.put(taskId, false);
         }
+    }
+
+    public boolean isTaskProcessing(Long taskId) {
+        return processingTasks.getOrDefault(taskId, false);
     }
 
     private void addTrackUrisToPlaylist(Task task, Set<String> trackUris, String bearerToken)

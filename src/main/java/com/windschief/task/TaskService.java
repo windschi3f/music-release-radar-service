@@ -20,21 +20,23 @@ public class TaskService implements TaskApi {
     private final AddedItemRepository addedItemRepository;
     private final SpotifyTokenService spotifyTokenService;
     private final ReleaseRadarService releaseRadarService;
+    private final TaskMapper taskMapper;
 
     @Inject
     public TaskService(TaskAccess taskAccess, TaskRepository taskRepository, AddedItemRepository addedItemRepository, 
-            SpotifyTokenService spotifyTokenService, ReleaseRadarService releaseRadarService) {
+            SpotifyTokenService spotifyTokenService, ReleaseRadarService releaseRadarService, TaskMapper taskMapper) {
         this.taskAccess = taskAccess;
         this.taskRepository = taskRepository;
         this.addedItemRepository = addedItemRepository;
         this.spotifyTokenService = spotifyTokenService;
         this.releaseRadarService = releaseRadarService;
+        this.taskMapper = taskMapper;
     }
 
     @Override
     public List<TaskResponseDto> getTasks() {
         return taskRepository.findByUserId(taskAccess.getCurrentUserId()).stream()
-                .map(TaskResponseDto::from)
+                .map(taskMapper::toDto)
                 .toList();
     }
 
@@ -44,7 +46,7 @@ public class TaskService implements TaskApi {
 
         taskAccess.checkAccess(task);
 
-        return Response.ok(TaskResponseDto.from(task)).build();
+        return Response.ok(taskMapper.toDto(task)).build();
     }
 
     @Override
@@ -75,7 +77,7 @@ public class TaskService implements TaskApi {
                 taskRequestDto.refreshToken());
 
         return Response.status(Response.Status.CREATED)
-            .entity(TaskResponseDto.from(task))
+            .entity(taskMapper.toDto(task))
             .build();
     }
 
@@ -87,7 +89,7 @@ public class TaskService implements TaskApi {
         taskAccess.checkAccess(task);
 
         TaskRequestDto.updateTask(task, taskRequestDto);
-        return Response.ok(TaskResponseDto.from(task)).build();
+        return Response.ok(taskMapper.toDto(task)).build();
     }
 
     @Override
