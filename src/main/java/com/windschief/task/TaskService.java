@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.releasedetection.ReleaseRadarService;
+import com.windschief.task.added_item.AddedItemRepository;
 
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
@@ -16,14 +17,16 @@ import jakarta.ws.rs.core.Response;
 public class TaskService implements TaskApi {
     private final TaskAccess taskAccess;
     private final TaskRepository taskRepository;
+    private final AddedItemRepository addedItemRepository;
     private final SpotifyTokenService spotifyTokenService;
     private final ReleaseRadarService releaseRadarService;
 
     @Inject
-    public TaskService(TaskAccess taskAccess, TaskRepository taskRepository, SpotifyTokenService spotifyTokenService,
-            ReleaseRadarService releaseRadarService) {
+    public TaskService(TaskAccess taskAccess, TaskRepository taskRepository, AddedItemRepository addedItemRepository, 
+            SpotifyTokenService spotifyTokenService, ReleaseRadarService releaseRadarService) {
         this.taskAccess = taskAccess;
         this.taskRepository = taskRepository;
+        this.addedItemRepository = addedItemRepository;
         this.spotifyTokenService = spotifyTokenService;
         this.releaseRadarService = releaseRadarService;
     }
@@ -90,11 +93,13 @@ public class TaskService implements TaskApi {
     @Override
     @Transactional
     public Response deleteTask(Long id) {
-        long deletedCount = taskRepository.deleteByTaskIdAndUserId(id, taskAccess.getCurrentUserId());
-        if (deletedCount == 0) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        } else {
-            return Response.noContent().build();
-        }
+        Task task = taskRepository.findById(id);
+
+        taskAccess.checkAccess(task);
+
+        addedItemRepository.deleteByTaskIdAndUserId(id, taskAccess.getCurrentUserId());
+        taskRepository.delete(task); // cascades to task items
+        
+        return Response.noContent().build();
     }
 }

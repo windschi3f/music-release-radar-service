@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.windschief.task.item.TaskItem;
+import com.windschief.task.item.TaskItemRepository;
 import com.windschief.task.item.TaskItemType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,9 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 class TaskRepositoryTest {
-
     @Inject
     TaskRepository taskRepository;
+    @Inject
+    TaskItemRepository taskItemRepository;
 
     @BeforeEach
     @TestTransaction
@@ -147,19 +149,22 @@ class TaskRepositoryTest {
 
     @Test
     @TestTransaction
-    void givenPersistedTask_whenDeleteByTaskIdAndUserId_thenTaskIsDeleted() {
+    void givenPersistedTaskWithItems_whenDeleteTask_thenTaskAndItemsAreDeleted() {
         // GIVEN
         Task task = new Task();
         task.setUserId("user");
         task.setPlatform(Platform.YOUTUBE);
+        task.addTaskItem(new TaskItem());
 
         taskRepository.persist(task);
 
+        assertEquals(1, taskItemRepository.listAll().size());
+
         // WHEN
-        long deletedCount = taskRepository.deleteByTaskIdAndUserId(task.getId(), task.getUserId());
+        taskRepository.delete(task);
 
         // THEN
-        assertEquals(1, deletedCount);
         assertEquals(0, taskRepository.findByUserId("user").size());
+        assertEquals(0, taskItemRepository.listAll().size());
     }
 }

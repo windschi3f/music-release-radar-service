@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.releasedetection.ReleaseRadarService;
+import com.windschief.task.added_item.AddedItemRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,10 +30,11 @@ import static org.mockito.Mockito.when;
 class TaskServiceTest {
     private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
+    private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
     private final SpotifyTokenService spotifyTokenService = mock(SpotifyTokenService.class);
     private final ReleaseRadarService releaseRadarService = mock(ReleaseRadarService.class);
-    private final TaskService taskService = new TaskService(taskAccess, taskRepository, spotifyTokenService,
-            releaseRadarService);
+    private final TaskService taskService = new TaskService(taskAccess, taskRepository, addedItemRepository,
+            spotifyTokenService, releaseRadarService);
 
     @BeforeEach
     public void setup() {
@@ -169,27 +171,16 @@ class TaskServiceTest {
         Long taskId = 1L;
         Task task = new Task();
         when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskRepository.deleteByTaskIdAndUserId(taskId, "testUser")).thenReturn(1L);
+
+        String userId = "testUser";
+        when(taskAccess.getCurrentUserId()).thenReturn(userId);
 
         // WHEN
         Response response = taskService.deleteTask(taskId);
 
         // THEN
+        verify(taskRepository).delete(task);
+        verify(addedItemRepository).deleteByTaskIdAndUserId(taskId, userId);
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
-    }
-
-    @Test
-    void givenNonExistentTask_whenDeleteTaskIsCalled_thenResponseIsNotFound() {
-        // GIVEN
-        Long taskId = 1L;
-        Task task = new Task();
-        when(taskRepository.findById(taskId)).thenReturn(task);
-        when(taskRepository.deleteByTaskIdAndUserId(taskId, "testUser")).thenReturn(0L);
-
-        // WHEN
-        Response response = taskService.deleteTask(taskId);
-
-        // THEN
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 }

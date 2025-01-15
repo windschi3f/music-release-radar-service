@@ -11,10 +11,6 @@ public class TaskRepository implements PanacheRepository<Task> {
         return list("userId", userId);
     }
 
-    public long deleteByTaskIdAndUserId(Long taskId, String userId) {
-        return delete("id = ?1 and userId = ?2", taskId, userId);
-    }
-
     public long countTasksForUser(String userId) {
         return count("userId = ?1", userId);
     }
