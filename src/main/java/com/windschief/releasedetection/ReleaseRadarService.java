@@ -76,6 +76,9 @@ public class ReleaseRadarService {
             addTrackUrisToPlaylist(task, newReleaseTrackUris, bearerToken);
             addTrackUrisToAddedTaskItems(task, newReleaseTrackUris);
             updateTaskExecutionTime(task.getId());
+
+            Log.info(String.format("Task executed successfully [taskId=%s, userId=%s, playlistId=%s, addedTracks=%d]",
+                    task.getId(), task.getUserId(), task.getPlaylistId(), newReleaseTrackUris.size()));
         } catch (Exception e) {
             Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
                     task.getId(), task.getUserId(), task.getPlaylistId()), e);
