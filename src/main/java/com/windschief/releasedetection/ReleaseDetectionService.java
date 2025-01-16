@@ -22,6 +22,8 @@ import com.windschief.task.added_item.AddedItemType;
 import com.windschief.task.item.TaskItem;
 import com.windschief.task.item.TaskItemType;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -46,6 +48,8 @@ public class ReleaseDetectionService {
         this.taskRepository = taskRepository;
     }
 
+    @Counted(value = "release.detection.operations")
+    @Timed(value = "release.detection.operation.duration")
     public List<AlbumItem> detectNewAlbumReleases(long taskId)
             throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
         final Task task = loadAndValidateTask(taskId);
@@ -88,7 +92,8 @@ public class ReleaseDetectionService {
         return albums;
     }
 
-    private List<AlbumItem> fetchAllArtistAlbums(String token, String artistId)
+    @Timed(value = "spotify.albums.fetch.duration", description = "Time taken to fetch all albums for an artist")
+    protected List<AlbumItem> fetchAllArtistAlbums(String token, String artistId)
             throws WebApplicationException, IOException, InterruptedException {
         final List<AlbumItem> albums = new ArrayList<>();
 

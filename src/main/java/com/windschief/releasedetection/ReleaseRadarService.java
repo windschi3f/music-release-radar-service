@@ -22,6 +22,8 @@ import com.windschief.task.added_item.AddedItem;
 import com.windschief.task.added_item.AddedItemRepository;
 import com.windschief.task.added_item.AddedItemType;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -58,6 +60,8 @@ public class ReleaseRadarService {
         this.httpClientService = httpClientService;
     }
 
+    @Counted(value = "release.radar.jobs", description = "Number of release radar jobs executed")
+    @Timed(value = "release.radar.job.duration", description = "Time taken to execute release radar jobs")
     @Scheduled(every = "24h")
     public void addNewReleases() {
         Instant startTime = Instant.now();
@@ -74,6 +78,8 @@ public class ReleaseRadarService {
                 Duration.between(startTime, Instant.now()).toSeconds(), tasks.size()));
     }
 
+    @Counted(value = "release.radar.tasks", description = "Number of individual tasks processed")
+    @Timed(value = "release.radar.task.duration", description = "Time taken to process individual tasks")
     public void execute(Task task) {
         final long taskId = task.getId();
         processingTasks.put(taskId, true);
@@ -105,7 +111,8 @@ public class ReleaseRadarService {
         return processingTasks.getOrDefault(taskId, false);
     }
 
-    private List<TrackItem> fetchTracksFromAlbums(String token, List<AlbumItem> newAlbumReleases)
+    @Timed(value = "spotify.tracks.fetch.duration", description = "Time taken to fetch tracks from albums")
+    protected List<TrackItem> fetchTracksFromAlbums(String token, List<AlbumItem> newAlbumReleases)
             throws WebApplicationException, IOException, InterruptedException {
         final List<TrackItem> tracks = new ArrayList<>();
 
@@ -127,7 +134,8 @@ public class ReleaseRadarService {
         return tracks;
     }
 
-    private void addTracksToPlaylist(String token, Task task, List<TrackItem> newTrackReleases)
+    @Timed(value = "spotify.playlist.update.duration", description = "Time taken to add tracks to playlist")
+    protected void addTracksToPlaylist(String token, Task task, List<TrackItem> newTrackReleases)
             throws WebApplicationException {
         final List<String> trackUris = newTrackReleases.stream()
                 .map(TrackItem::uri)
