@@ -7,7 +7,6 @@ import com.windschief.auth.SpotifyTokenService;
 import com.windschief.releasedetection.ReleaseRadarService;
 import com.windschief.task.added_item.AddedItemRepository;
 
-import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -23,7 +22,7 @@ public class TaskService implements TaskApi {
     private final TaskMapper taskMapper;
 
     @Inject
-    public TaskService(TaskAccess taskAccess, TaskRepository taskRepository, AddedItemRepository addedItemRepository, 
+    public TaskService(TaskAccess taskAccess, TaskRepository taskRepository, AddedItemRepository addedItemRepository,
             SpotifyTokenService spotifyTokenService, ReleaseRadarService releaseRadarService, TaskMapper taskMapper) {
         this.taskAccess = taskAccess;
         this.taskRepository = taskRepository;
@@ -63,22 +62,19 @@ public class TaskService implements TaskApi {
     @Override
     @Transactional
     public Response createTask(TaskRequestDto taskRequestDto) {
-        if (taskRequestDto.refreshToken() == null) {
-            throw new IllegalArgumentException("refreshToken is required");
+        if (!spotifyTokenService.hasRefreshToken(taskAccess.getSecurityIdentity().getPrincipal().getName())) {
+            return Response.status(Response.Status.PRECONDITION_FAILED)
+                    .entity("Refresh token must be saved before creating tasks")
+                    .build();
         }
 
         Task task = TaskRequestDto.toTask(taskRequestDto);
         task.setUserId(taskAccess.getCurrentUserId());
         taskRepository.persist(task);
 
-        final SecurityIdentity securityIdentity = taskAccess.getSecurityIdentity();
-        spotifyTokenService.createOrUpdateRefreshToken(
-                securityIdentity.getPrincipal().getName(),
-                taskRequestDto.refreshToken());
-
         return Response.status(Response.Status.CREATED)
-            .entity(taskMapper.toDto(task))
-            .build();
+                .entity(taskMapper.toDto(task))
+                .build();
     }
 
     @Override
@@ -109,7 +105,7 @@ public class TaskService implements TaskApi {
 
         addedItemRepository.deleteByTaskIdAndUserId(id, taskAccess.getCurrentUserId());
         taskRepository.delete(task); // cascades to task items
-        
+
         return Response.noContent().build();
     }
 }

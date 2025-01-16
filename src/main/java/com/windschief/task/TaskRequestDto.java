@@ -8,8 +8,7 @@ public record TaskRequestDto(
         int executionIntervalDays,
         LocalDate checkFrom,
         boolean active,
-        String playlistId,
-        String refreshToken) {
+        String playlistId) {
     public static Task toTask(TaskRequestDto taskRequestDto) {
         if (taskRequestDto == null) {
             throw new IllegalArgumentException("TaskRequestDto cannot be null");

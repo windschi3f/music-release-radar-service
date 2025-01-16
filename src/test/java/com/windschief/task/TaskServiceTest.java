@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class TaskServiceTest {
+    private static final String USER_ID = "testUser";
     private final TaskAccess taskAccess = mock(TaskAccess.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
     private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
@@ -39,10 +40,10 @@ class TaskServiceTest {
 
     @BeforeEach
     public void setup() {
-        when(taskAccess.getCurrentUserId()).thenReturn("testUser");
+        when(taskAccess.getCurrentUserId()).thenReturn(USER_ID);
 
         final Principal principal = mock(Principal.class);
-        when(principal.getName()).thenReturn("testUser");
+        when(principal.getName()).thenReturn(USER_ID);
 
         final SecurityIdentity securityIdentity = mock(SecurityIdentity.class);
         when(securityIdentity.getPrincipal()).thenReturn(principal);
@@ -56,14 +57,14 @@ class TaskServiceTest {
         // GIVEN
         Task task1 = new Task();
         Task task2 = new Task();
-        when(taskRepository.findByUserId("testUser")).thenReturn(Arrays.asList(task1, task2));
+        when(taskRepository.findByUserId(USER_ID)).thenReturn(Arrays.asList(task1, task2));
 
         // WHEN
         List<TaskResponseDto> result = taskService.getTasks();
 
         // THEN
         assertEquals(2, result.size());
-        verify(taskRepository).findByUserId("testUser");
+        verify(taskRepository).findByUserId(USER_ID);
     }
 
     @Test
@@ -71,7 +72,7 @@ class TaskServiceTest {
         // GIVEN
         Long taskId = 1L;
         Task task = new Task();
-        task.setUserId("testUser");
+        task.setUserId(USER_ID);
         when(taskRepository.findById(taskId)).thenReturn(task);
 
         // WHEN
@@ -97,8 +98,7 @@ class TaskServiceTest {
     @Test
     void givenValidTaskRequest_whenCreateTask_thenTaskIsCreated() {
         // GIVEN
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
-                "refreshToken");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
 
         doAnswer(invocation -> {
             Task task = invocation.getArgument(0);
@@ -106,27 +106,27 @@ class TaskServiceTest {
             return null;
         }).when(taskRepository).persist(any(Task.class));
 
+        when(spotifyTokenService.hasRefreshToken(USER_ID)).thenReturn(true);
+
         // WHEN
         Response result = taskService.createTask(taskRequestDto);
 
         // THEN
         assertNotNull(result);
         verify(taskRepository).persist(any(Task.class));
-        verify(spotifyTokenService).createOrUpdateRefreshToken("testUser", "refreshToken");
     }
 
     @Test
-    void givenMissingRefreshToken_whenCreateTask_thenExceptionIsThrown() {
+    void givenMissingRefreshToken_whenCreateTask_thenReturnPreconditionFailed() {
         // GIVEN
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
-                null);
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
+        when(spotifyTokenService.hasRefreshToken(USER_ID)).thenReturn(false);
 
         // WHEN
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> taskService.createTask(taskRequestDto));
+        Response response = taskService.createTask(taskRequestDto);
 
         // THEN
-        assertEquals("refreshToken is required", exception.getMessage());
+        assertEquals(Response.Status.PRECONDITION_FAILED.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -134,12 +134,11 @@ class TaskServiceTest {
         // GIVEN
         Long taskId = 1L;
         Task existingTask = new Task();
-        existingTask.setUserId("testUser");
+        existingTask.setUserId(USER_ID);
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
         when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(false);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
-                "refreshToken");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
 
         // WHEN
         Response response = taskService.updateTask(taskId, taskRequestDto);
@@ -160,8 +159,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(task);
         doThrow(new NotFoundException()).when(taskAccess).checkAccess(task);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
-                "refreshToken");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
 
         // WHEN / THEN
         assertThrows(NotFoundException.class, () -> taskService.updateTask(taskId, taskRequestDto));
@@ -175,8 +173,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(task);
         when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(true);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
-                "refreshToken");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
 
         // WHEN / THEN
         assertThrows(IllegalStateException.class, () -> taskService.updateTask(taskId, taskRequestDto));
@@ -189,9 +186,6 @@ class TaskServiceTest {
         Task task = new Task();
         when(taskRepository.findById(taskId)).thenReturn(task);
 
-        String userId = "testUser";
-        when(taskAccess.getCurrentUserId()).thenReturn(userId);
-
         when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(false);
 
         // WHEN
@@ -199,7 +193,7 @@ class TaskServiceTest {
 
         // THEN
         verify(taskRepository).delete(task);
-        verify(addedItemRepository).deleteByTaskIdAndUserId(taskId, userId);
+        verify(addedItemRepository).deleteByTaskIdAndUserId(taskId, USER_ID);
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 

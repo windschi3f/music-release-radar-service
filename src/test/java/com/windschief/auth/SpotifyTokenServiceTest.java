@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.security.Principal;
 import java.time.Instant;
 import java.util.Base64;
 
@@ -18,61 +19,67 @@ import org.junit.jupiter.api.Test;
 import com.windschief.spotify.SpotifyAccountsApi;
 import com.windschief.spotify.model.TokenResponse;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.ws.rs.WebApplicationException;
-
+import jakarta.ws.rs.core.Response;
 
 public class SpotifyTokenServiceTest {
+    private static final String USER_ID = "test-user-id";
+
     private final SpotifyTokenRepository tokenRepository = mock(SpotifyTokenRepository.class);
     private final SpotifyConfig spotifyConfig = mock(SpotifyConfig.class);
     private final SpotifyAccountsApi spotifyAccountsApi = mock(SpotifyAccountsApi.class);
-    private final SpotifyTokenService spotifyTokenService = new SpotifyTokenService(tokenRepository, spotifyConfig, spotifyAccountsApi);
+    private final SecurityIdentity securityIdentity = mock(SecurityIdentity.class);
+    private final SpotifyTokenService spotifyTokenService = new SpotifyTokenService(tokenRepository, spotifyConfig,
+            spotifyAccountsApi, securityIdentity);
 
     @BeforeEach
     void setup() {
         when(spotifyConfig.clientId()).thenReturn("test-client-id");
         when(spotifyConfig.clientSecret()).thenReturn("test-client-secret");
+
+        final Principal principal = mock(Principal.class);
+        when(principal.getName()).thenReturn(USER_ID);
+        when(securityIdentity.getPrincipal()).thenReturn(principal);
     }
 
     @Test
     void givenNoToken_whenGetValidBearerAccessToken_thenThrowException() {
         // given
-        final String userId = "test-user-id";
-        when(tokenRepository.findByUserId(userId)).thenReturn(null);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(null);
 
         // when / then
-        assertThrows(SpotifyTokenException.class, () -> spotifyTokenService.getValidBearerAccessToken(userId));
+        assertThrows(SpotifyTokenException.class, () -> spotifyTokenService.getValidBearerAccessToken(USER_ID));
     }
 
     @Test
     void givenNoRefreshToken_whenGetValidBearerAccessToken_thenThrowException() {
         // given
-        final String userId = "test-user-id";
-        final SpotifyToken token = new SpotifyToken(userId, null, null, null);
-        when(tokenRepository.findByUserId(userId)).thenReturn(token);
+        final SpotifyToken token = new SpotifyToken(USER_ID, null, null, null);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(token);
 
         // when / then
-        assertThrows(SpotifyTokenException.class, () -> spotifyTokenService.getValidBearerAccessToken(userId));
+        assertThrows(SpotifyTokenException.class, () -> spotifyTokenService.getValidBearerAccessToken(USER_ID));
     }
 
     @Test
-    void givenExpiredToken_whenGetValidBearerAccessToken_thenRefreshToken() throws WebApplicationException, SpotifyTokenException {
+    void givenExpiredToken_whenGetValidBearerAccessToken_thenRefreshToken()
+            throws WebApplicationException, SpotifyTokenException {
         // given
-        final String userId = "test-user-id";
         final String newAccessToken = "new-access-token";
-        final SpotifyToken token = new SpotifyToken(userId, null, "test-refresh-token", Instant.now().minusSeconds(1));
-        when(tokenRepository.findByUserId(userId)).thenReturn(token);
-        
-        TokenResponse tokenResponse = new TokenResponse(newAccessToken, "", 3600, userId, "test-refresh-token");
-        
+        final SpotifyToken token = new SpotifyToken(USER_ID, null, "test-refresh-token", Instant.now().minusSeconds(1));
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(token);
+
+        TokenResponse tokenResponse = new TokenResponse(newAccessToken, "", 3600, USER_ID, "test-refresh-token");
+
         when(spotifyAccountsApi.refreshToken(
-            "Basic " + Base64.getEncoder().encodeToString("test-client-id:test-client-secret".getBytes()),
-            "refresh_token",
-            "test-refresh-token",
-            "test-client-id"
-        )).thenReturn(tokenResponse);
+                "Basic " + Base64.getEncoder().encodeToString("test-client-id:test-client-secret".getBytes()),
+                "refresh_token",
+                "test-refresh-token",
+                "test-client-id")).thenReturn(tokenResponse);
 
         // when
-        String result = spotifyTokenService.getValidBearerAccessToken(userId);
+        String result = spotifyTokenService.getValidBearerAccessToken(USER_ID);
 
         // then
         assertEquals("Bearer " + newAccessToken, result);
@@ -83,44 +90,44 @@ public class SpotifyTokenServiceTest {
     @Test
     void givenNonExpiredToken_whenGetValidBearerAccessToken_thenReturnToken() throws SpotifyTokenException {
         // given
-        final String userId = "test-user-id";
         final String accessToken = "test-access-token";
-        final SpotifyToken token = new SpotifyToken(userId, accessToken, "test-refresh-token", Instant.now().plusSeconds(3600));
-        when(tokenRepository.findByUserId(userId)).thenReturn(token);
+        final SpotifyToken token = new SpotifyToken(USER_ID, accessToken, "test-refresh-token",
+                Instant.now().plusSeconds(3600));
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(token);
 
         // when
-        String result = spotifyTokenService.getValidBearerAccessToken(userId);
+        String result = spotifyTokenService.getValidBearerAccessToken(USER_ID);
 
         // then
         assertEquals("Bearer " + accessToken, result);
     }
 
     @Test
-    void givenNewToken_whenCreateOrUpdateRefreshToken_thenCreateToken() {
+    void givenNoToken_whenStoreRefreshToken_thenCreateTokenAndReturnCreated() {
         // given
-        final String userId = "test-user-id";
         final String refreshToken = "test-refresh-token";
-        when(tokenRepository.findByUserId(userId)).thenReturn(null);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(null);
 
         // when
-        spotifyTokenService.createOrUpdateRefreshToken(userId, refreshToken);
+        Response response = spotifyTokenService.storeRefreshToken(refreshToken);
 
         // then
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
         verify(tokenRepository).persist(any(SpotifyToken.class));
     }
 
     @Test
-    void givenExistingToken_whenCreateOrUpdateRefreshToken_thenUpdateToken() {
+    void givenExistingToken_whenStoreRefreshToken_thenUpdateTokenAndReturnOk() {
         // given
-        final String userId = "test-user-id";
         final String newRefreshToken = "test-refresh-token";
-        final SpotifyToken token = new SpotifyToken(userId, "test-access-token", "old-refresh-token", Instant.now());
-        when(tokenRepository.findByUserId(userId)).thenReturn(token);
+        final SpotifyToken token = new SpotifyToken(USER_ID, "test-access-token", "old-refresh-token", Instant.now());
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(token);
 
         // when
-        spotifyTokenService.createOrUpdateRefreshToken(userId, newRefreshToken);
+        Response response = spotifyTokenService.storeRefreshToken(newRefreshToken);
 
         // then
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         verify(tokenRepository, times(0)).persist(any(SpotifyToken.class));
         assertEquals(newRefreshToken, token.getRefreshToken());
     }
