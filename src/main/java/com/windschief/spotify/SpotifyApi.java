@@ -11,6 +11,7 @@ import com.windschief.spotify.model.TracksResponse;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
@@ -25,6 +26,7 @@ import jakarta.ws.rs.core.MediaType;
 
 @Path("/v1")
 @RegisterRestClient(configKey = "spotify-api")
+@ApplicationScoped
 public interface SpotifyApi {
         /**
          * Get the current user's Spotify profile.

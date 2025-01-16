@@ -7,12 +7,12 @@ import com.windschief.auth.SpotifyTokenService;
 import com.windschief.releasedetection.ReleaseRadarService;
 import com.windschief.task.added_item.AddedItemRepository;
 
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 
-@RequestScoped
+@ApplicationScoped
 public class TaskService implements TaskApi {
     private final TaskAccess taskAccess;
     private final TaskRepository taskRepository;

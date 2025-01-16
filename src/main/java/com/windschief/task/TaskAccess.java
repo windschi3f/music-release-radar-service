@@ -1,12 +1,12 @@
 package com.windschief.task;
 
 import io.quarkus.security.identity.SecurityIdentity;
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 
-@RequestScoped
+@ApplicationScoped
 public class TaskAccess {
     private final SecurityIdentity securityIdentity;
     private final TaskRepository taskRepository;

@@ -4,6 +4,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import com.windschief.spotify.model.TokenResponse;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.HeaderParam;
@@ -15,6 +16,7 @@ import jakarta.ws.rs.core.MediaType;
 
 @Path("/")
 @RegisterRestClient(configKey = "spotify-accounts-api") 
+@ApplicationScoped
 public interface SpotifyAccountsApi {
     /**
      * Refresh an access token.
