@@ -1,16 +1,11 @@
 package com.windschief.releasedetection;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.windschief.auth.SpotifyTokenException;
@@ -19,12 +14,11 @@ import com.windschief.client.HttpClientService;
 import com.windschief.spotify.SpotifyApi;
 import com.windschief.spotify.model.AlbumItem;
 import com.windschief.spotify.model.AlbumsResponse;
-import com.windschief.spotify.model.TrackItem;
-import com.windschief.spotify.model.TracksResponse;
 import com.windschief.task.Platform;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
 import com.windschief.task.added_item.AddedItemRepository;
+import com.windschief.task.added_item.AddedItemType;
 import com.windschief.task.item.TaskItem;
 import com.windschief.task.item.TaskItemType;
 
@@ -52,14 +46,13 @@ public class ReleaseDetectionService {
         this.taskRepository = taskRepository;
     }
 
-    public List<TrackItem> detectNewReleaseTracks(long taskId)
+    public List<AlbumItem> detectNewAlbumReleases(long taskId)
             throws WebApplicationException, IOException, InterruptedException, SpotifyTokenException {
         final Task task = loadAndValidateTask(taskId);
 
-        final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
-        final Set<String> newAlbumIds = detectNewAlbumIds(task, bearerToken);
+        final String token = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
 
-        return getTracksForAlbums(bearerToken, newAlbumIds);
+        return findNewReleasesFromArtists(task, token);
     }
 
     @Transactional
@@ -78,76 +71,53 @@ public class ReleaseDetectionService {
         return task;
     }
 
-    private Set<String> detectNewAlbumIds(Task task, String bearerToken)
+    private List<AlbumItem> findNewReleasesFromArtists(Task task, String token)
             throws WebApplicationException, IOException, InterruptedException {
         final List<String> artistIds = task.getTaskItems().stream()
                 .map(TaskItem::getExternalReferenceId)
                 .toList();
 
-        final Set<String> albumIds = new HashSet<>();
+        final List<AlbumItem> albums = new ArrayList<>();
         for (String artistId : artistIds) {
-            final List<AlbumItem> albums = getAllAlbums(bearerToken, artistId);
-            albums.stream()
-                    .filter(album -> isAlbumAfterDate(album, task.getCheckFrom()))
-                    .filter(album -> !isAlbumProcessed(album.id(), task.getId()))
-                    .map(AlbumItem::id)
-                    .forEach(albumIds::add);
+            fetchAllArtistAlbums(token, artistId).stream()
+                    .filter(album -> isAlbumReleasedOnOrAfter(album, task.getCheckFrom()))
+                    .filter(album -> !isAlbumAlreadyAdded(album.id(), task.getId()))
+                    .forEach(albums::add);
         }
 
-        return albumIds;
+        return albums;
     }
 
-    private List<AlbumItem> getAllAlbums(String bearerToken, String artistId)
+    private List<AlbumItem> fetchAllArtistAlbums(String token, String artistId)
             throws WebApplicationException, IOException, InterruptedException {
-        final List<AlbumItem> allAlbums = new ArrayList<>();
+        final List<AlbumItem> albums = new ArrayList<>();
 
-        AlbumsResponse response = spotifyApi.getArtistAlbums(bearerToken, artistId, "album,single", 50, 0);
+        AlbumsResponse response = spotifyApi.getArtistAlbums(token, artistId, "album,single", 50, 0);
         while (true) {
-            allAlbums.addAll(response.items());
+            albums.addAll(response.items());
             if (response.next() == null) {
                 break;
             }
 
-            response = httpClientService.get(response.next(), bearerToken, AlbumsResponse.class);
+            response = httpClientService.get(response.next(), token, AlbumsResponse.class);
         }
 
-        return allAlbums;
+        return albums;
     }
 
-    private boolean isAlbumAfterDate(AlbumItem album, Instant checkFrom) {
-        final LocalDateTime releaseDateTime = switch (album.release_date_precision()) {
-            case "day" -> LocalDate.parse(album.release_date()).atStartOfDay();
-            case "month" -> YearMonth.parse(album.release_date()).atDay(1).atStartOfDay();
-            case "year" -> Year.parse(album.release_date()).atDay(1).atStartOfDay();
+    private boolean isAlbumReleasedOnOrAfter(AlbumItem album, LocalDate checkFrom) {
+        final LocalDate releaseDate = switch (album.release_date_precision()) {
+            case "day" -> LocalDate.parse(album.release_date());
+            case "month" -> YearMonth.parse(album.release_date()).atEndOfMonth();
+            case "year" -> Year.parse(album.release_date()).atDay(Year.parse(album.release_date()).length());
             default -> throw new IllegalArgumentException("Unknown date precision: " + album.release_date_precision());
         };
 
-        return releaseDateTime.isAfter(LocalDateTime.ofInstant(checkFrom, ZoneOffset.UTC))
-                || releaseDateTime.isEqual(LocalDateTime.ofInstant(checkFrom, ZoneOffset.UTC));
+        return !releaseDate.isBefore(checkFrom);
     }
 
     @Transactional
-    protected boolean isAlbumProcessed(String albumId, Long taskId) {
-        return addedItemRepository.existsByExternalIdAndTaskId(albumId, taskId);
+    protected boolean isAlbumAlreadyAdded(String albumId, Long taskId) {
+        return addedItemRepository.existsByTaskIdAndExternalIdAndItemType(taskId, albumId, AddedItemType.ALBUM);
     }
-
-    private List<TrackItem> getTracksForAlbums(String bearerToken, Set<String> albumIds)
-            throws WebApplicationException, IOException, InterruptedException {
-        final List<TrackItem> allTracks = new ArrayList<>();
-
-        for (String albumId : albumIds) {
-            TracksResponse response = spotifyApi.getAlbumTracks(bearerToken, albumId, 50, 0);
-            while (true) {
-                allTracks.addAll(response.items());
-                if (response.next() == null) {
-                    break;
-                }
-
-                response = httpClientService.get(response.next(), bearerToken, TracksResponse.class);
-            }
-        }
-
-        return allTracks;
-    }
-
 }

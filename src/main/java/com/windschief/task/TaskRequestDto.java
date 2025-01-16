@@ -1,12 +1,12 @@
 package com.windschief.task;
 
-import java.time.Instant;
+import java.time.LocalDate;
 
 public record TaskRequestDto(
         String name,
         Platform platform,
         int executionIntervalDays,
-        Instant checkFrom,
+        LocalDate checkFrom,
         boolean active,
         String playlistId,
         String refreshToken) {

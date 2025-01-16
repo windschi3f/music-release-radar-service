@@ -1,7 +1,7 @@
 package com.windschief.task;
 
 import java.security.Principal;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -97,7 +97,7 @@ class TaskServiceTest {
     @Test
     void givenValidTaskRequest_whenCreateTask_thenTaskIsCreated() {
         // GIVEN
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
                 "refreshToken");
 
         doAnswer(invocation -> {
@@ -118,7 +118,7 @@ class TaskServiceTest {
     @Test
     void givenMissingRefreshToken_whenCreateTask_thenExceptionIsThrown() {
         // GIVEN
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
                 null);
 
         // WHEN
@@ -138,7 +138,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
         when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(false);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
                 "refreshToken");
 
         // WHEN
@@ -160,7 +160,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(task);
         doThrow(new NotFoundException()).when(taskAccess).checkAccess(task);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
                 "refreshToken");
 
         // WHEN / THEN
@@ -175,7 +175,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(task);
         when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(true);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, Instant.now(), true, "123",
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123",
                 "refreshToken");
 
         // WHEN / THEN

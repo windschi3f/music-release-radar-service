@@ -1,6 +1,7 @@
 package com.windschief.task;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 public record TaskResponseDto(
         Long id,
@@ -8,7 +9,7 @@ public record TaskResponseDto(
         Platform platform,
         int executionIntervalDays,
         Instant lastTimeExecuted,
-        Instant checkFrom,
+        LocalDate checkFrom,
         boolean active,
         String playlistId,
         boolean processing) {

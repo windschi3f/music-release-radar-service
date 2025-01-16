@@ -50,7 +50,8 @@ class AddedItemRepositoryTest {
 
         AddedItem addedItem = new AddedItem();
         addedItem.setTask(task);
-        addedItem.setExternalId("spotify:track:123");
+        addedItem.setExternalId("123");
+        addedItem.setItemType(AddedItemType.TRACK);
         addedItem.setAddedAt(Instant.now());
         addedItemRepository.persist(addedItem);
 
@@ -59,7 +60,7 @@ class AddedItemRepositoryTest {
 
         // THEN
         assertEquals(1, foundItems.size());
-        assertEquals("spotify:track:123", foundItems.get(0).getExternalId());
+        assertEquals("123", foundItems.get(0).getExternalId());
     }
 
     @Test
@@ -73,7 +74,7 @@ class AddedItemRepositoryTest {
 
         AddedItem addedItem = new AddedItem();
         addedItem.setTask(task);
-        addedItem.setExternalId("spotify:track:123");
+        addedItem.setExternalId("123");
         addedItemRepository.persist(addedItem);
 
         // WHEN
@@ -89,8 +90,6 @@ class AddedItemRepositoryTest {
     void givenNoAddedItems_whenGetLastAddedAt_thenReturnsNull() {
         // GIVEN
         Task task = new Task();
-        task.setUserId("user");
-        task.setPlatform(Platform.SPOTIFY);
         taskRepository.persist(task);
 
         // WHEN
@@ -112,7 +111,7 @@ class AddedItemRepositoryTest {
         Instant timestamp = Instant.now();
         AddedItem addedItem = new AddedItem();
         addedItem.setTask(task);
-        addedItem.setExternalId("spotify:track:123");
+        addedItem.setExternalId("123");
         addedItem.setAddedAt(timestamp);
         addedItemRepository.persist(addedItem);
 
@@ -135,14 +134,14 @@ class AddedItemRepositoryTest {
         Instant earlierTimestamp = Instant.now().minusSeconds(3600);
         AddedItem earlierItem = new AddedItem();
         earlierItem.setTask(task);
-        earlierItem.setExternalId("spotify:track:123");
+        earlierItem.setExternalId("123");
         earlierItem.setAddedAt(earlierTimestamp);
         addedItemRepository.persist(earlierItem);
 
         Instant laterTimestamp = Instant.now();
         AddedItem laterItem = new AddedItem();
         laterItem.setTask(task);
-        laterItem.setExternalId("spotify:track:456");
+        laterItem.setExternalId("456");
         laterItem.setAddedAt(laterTimestamp);
         addedItemRepository.persist(laterItem);
 
@@ -155,22 +154,6 @@ class AddedItemRepositoryTest {
 
     @Test
     @TestTransaction
-    void givenNoAddedItems_whenExistsByExternalReferenceIdAndTaskId_thenReturnsFalse() {
-        // GIVEN
-        Task task = new Task();
-        task.setUserId("user");
-        task.setPlatform(Platform.SPOTIFY);
-        taskRepository.persist(task);
-
-        // WHEN
-        boolean exists = addedItemRepository.existsByExternalIdAndTaskId("spotify:track:123", task.getId());
-
-        // THEN
-        assertEquals(false, exists);
-    }
-
-    @Test
-    @TestTransaction
     void givenAddedItem_whenExistsByExternalReferenceIdAndTaskId_thenReturnsTrue() {
         // GIVEN
         Task task = new Task();
@@ -178,15 +161,26 @@ class AddedItemRepositoryTest {
         task.setPlatform(Platform.SPOTIFY);
         taskRepository.persist(task);
 
-        AddedItem addedItem = new AddedItem();
-        addedItem.setTask(task);
-        addedItem.setExternalId("spotify:track:123");
-        addedItemRepository.persist(addedItem);
+        AddedItem addedTrack = new AddedItem();
+        addedTrack.setTask(task);
+        addedTrack.setExternalId("123");
+        addedTrack.setItemType(AddedItemType.TRACK);
+        addedItemRepository.persist(addedTrack);
+
+        AddedItem addedAlbum = new AddedItem();
+        addedAlbum.setTask(task);
+        addedAlbum.setExternalId("123");
+        addedAlbum.setItemType(AddedItemType.ALBUM);
+        addedItemRepository.persist(addedAlbum);
 
         // WHEN
-        boolean exists = addedItemRepository.existsByExternalIdAndTaskId("spotify:track:123", task.getId());
+        boolean addedTrackExists = addedItemRepository.existsByTaskIdAndExternalIdAndItemType(task.getId(), "123",
+                AddedItemType.TRACK);
+        boolean addedAlbumExists = addedItemRepository.existsByTaskIdAndExternalIdAndItemType(task.getId(), "123",
+                AddedItemType.ALBUM);
 
         // THEN
-        assertEquals(true, exists);
+        assertEquals(true, addedTrackExists);
+        assertEquals(true, addedAlbumExists);
     }
 }

@@ -23,10 +23,9 @@ public class AddedItem {
     @JoinColumn(name = "task_id")
     @JsonIgnore
     private Task task;
-
     private String externalId;
-
     private Instant addedAt;
+    private AddedItemType itemType;
 
     // Default constructor
     public AddedItem() {
@@ -58,5 +57,13 @@ public class AddedItem {
 
     public void setAddedAt(Instant addedAt) {
         this.addedAt = addedAt;
+    }
+
+    public AddedItemType getItemType() {
+        return itemType;
+    }
+
+    public void setItemType(AddedItemType itemType) {
+        this.itemType = itemType;
     }
 }

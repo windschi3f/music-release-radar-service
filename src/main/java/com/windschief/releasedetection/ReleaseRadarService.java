@@ -1,23 +1,26 @@
 package com.windschief.releasedetection;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
-
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.windschief.auth.SpotifyTokenService;
+import com.windschief.client.HttpClientService;
 import com.windschief.spotify.SpotifyApi;
+import com.windschief.spotify.model.AlbumItem;
 import com.windschief.spotify.model.PlaylistAddItemsRequest;
 import com.windschief.spotify.model.TrackItem;
+import com.windschief.spotify.model.TracksResponse;
 import com.windschief.task.Task;
 import com.windschief.task.TaskRepository;
 import com.windschief.task.added_item.AddedItem;
 import com.windschief.task.added_item.AddedItemRepository;
+import com.windschief.task.added_item.AddedItemType;
 
 import io.quarkus.logging.Log;
 import io.quarkus.scheduler.Scheduled;
@@ -35,6 +38,7 @@ public class ReleaseRadarService {
     private final SpotifyTokenService spotifyTokenService;
     private final SpotifyApi spotifyApi;
     private final AddedItemRepository addedItemRepository;
+    private final HttpClientService httpClientService;
 
     private final ConcurrentMap<Long, Boolean> processingTasks = new ConcurrentHashMap<>();
 
@@ -44,12 +48,14 @@ public class ReleaseRadarService {
             TaskRepository taskRepository,
             SpotifyTokenService spotifyTokenService,
             @RestClient SpotifyApi spotifyApi,
-            AddedItemRepository addedItemRepository) {
+            AddedItemRepository addedItemRepository,
+            HttpClientService httpClientService) {
         this.releaseDetectionService = releaseDetectionService;
         this.taskRepository = taskRepository;
         this.spotifyTokenService = spotifyTokenService;
         this.spotifyApi = spotifyApi;
         this.addedItemRepository = addedItemRepository;
+        this.httpClientService = httpClientService;
     }
 
     @Scheduled(every = "24h")
@@ -73,25 +79,24 @@ public class ReleaseRadarService {
         processingTasks.put(taskId, true);
 
         try {
-            final Set<String> newReleaseTrackUris = releaseDetectionService.detectNewReleaseTracks(taskId)
-                    .stream()
-                    .map(TrackItem::uri)
-                    .collect(Collectors.toSet());
-            if (newReleaseTrackUris.isEmpty()) {
-                return;
+            final List<AlbumItem> newAlbumReleases = releaseDetectionService.detectNewAlbumReleases(taskId);
+
+            int addedTracks = 0;
+            if (!newAlbumReleases.isEmpty()) {
+                final String token = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
+                final List<TrackItem> newTrackReleases = fetchTracksFromAlbums(token, newAlbumReleases);
+                addTracksToPlaylist(token, task, newTrackReleases);
+                updateAddedTaskItems(task, newAlbumReleases, newTrackReleases);
+                addedTracks = newTrackReleases.size();
             }
 
-            final String bearerToken = spotifyTokenService.getValidBearerAccessToken(task.getUserId());
-            addTrackUrisToPlaylist(task, newReleaseTrackUris, bearerToken);
-            addTrackUrisToAddedTaskItems(task, newReleaseTrackUris);
-            updateTaskExecutionTime(task.getId());
-
             Log.info(String.format("Task executed successfully [taskId=%s, userId=%s, playlistId=%s, addedTracks=%d]",
-                    task.getId(), task.getUserId(), task.getPlaylistId(), newReleaseTrackUris.size()));
+                    task.getId(), task.getUserId(), task.getPlaylistId(), addedTracks));
         } catch (Exception e) {
             Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
                     task.getId(), task.getUserId(), task.getPlaylistId()), e);
         } finally {
+            updateTasksLastExecution(task.getId());
             processingTasks.put(taskId, false);
         }
     }
@@ -100,32 +105,67 @@ public class ReleaseRadarService {
         return processingTasks.getOrDefault(taskId, false);
     }
 
-    private void addTrackUrisToPlaylist(Task task, Set<String> trackUris, String bearerToken)
+    private List<TrackItem> fetchTracksFromAlbums(String token, List<AlbumItem> newAlbumReleases)
+            throws WebApplicationException, IOException, InterruptedException {
+        final List<TrackItem> tracks = new ArrayList<>();
+
+        final List<String> albumIds = newAlbumReleases.stream()
+                .map(AlbumItem::id)
+                .toList();
+        for (String albumId : albumIds) {
+            TracksResponse response = spotifyApi.getAlbumTracks(token, albumId, 50, 0);
+            while (true) {
+                tracks.addAll(response.items());
+                if (response.next() == null) {
+                    break;
+                }
+
+                response = httpClientService.get(response.next(), token, TracksResponse.class);
+            }
+        }
+
+        return tracks;
+    }
+
+    private void addTracksToPlaylist(String token, Task task, List<TrackItem> newTrackReleases)
             throws WebApplicationException {
+        final List<String> trackUris = newTrackReleases.stream()
+                .map(TrackItem::uri)
+                .toList();
         for (int i = 0; i < trackUris.size(); i += CHUNK_SIZE) {
             final List<String> idsChunk = trackUris.stream()
                     .skip(i)
                     .limit(CHUNK_SIZE)
                     .toList();
             final PlaylistAddItemsRequest request = new PlaylistAddItemsRequest(idsChunk, null);
-            spotifyApi.addToPlaylist(bearerToken, task.getPlaylistId(), request);
+            spotifyApi.addToPlaylist(token, task.getPlaylistId(), request);
         }
     }
 
     @Transactional
-    protected void addTrackUrisToAddedTaskItems(Task task, Set<String> trackUris) {
+    protected void updateAddedTaskItems(Task task, List<AlbumItem> newAlbumReleases, List<TrackItem> newTrackReleases) {
         Instant now = Instant.now();
-        for (String trackUri : trackUris) {
+        for (AlbumItem album : newAlbumReleases) {
             AddedItem addedItem = new AddedItem();
             addedItem.setTask(task);
-            addedItem.setExternalId(trackUri);
+            addedItem.setExternalId(album.id());
+            addedItem.setItemType(AddedItemType.ALBUM);
+            addedItem.setAddedAt(now);
+            addedItemRepository.persist(addedItem);
+        }
+
+        for (TrackItem track : newTrackReleases) {
+            AddedItem addedItem = new AddedItem();
+            addedItem.setTask(task);
+            addedItem.setExternalId(track.id());
+            addedItem.setItemType(AddedItemType.TRACK);
             addedItem.setAddedAt(now);
             addedItemRepository.persist(addedItem);
         }
     }
 
     @Transactional
-    protected void updateTaskExecutionTime(long taskId) {
+    protected void updateTasksLastExecution(long taskId) {
         Task task = taskRepository.findById(taskId);
         task.setLastTimeExecuted(Instant.now());
         taskRepository.persist(task);

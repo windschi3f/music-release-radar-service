@@ -12,8 +12,8 @@ public class AddedItemRepository implements PanacheRepository<AddedItem> {
         return list("task.id", taskId);
     }
 
-    public boolean existsByExternalIdAndTaskId(String externalId, Long taskId) {
-        return count("externalId = ?1 and task.id = ?2", externalId, taskId) > 0;
+    public boolean existsByTaskIdAndExternalIdAndItemType(Long taskId, String externalId, AddedItemType itemType) {
+        return count("task.id = ?1 and externalId = ?2 and itemType = ?3", taskId, externalId, itemType) > 0;
     }
 
     public long deleteByTaskIdAndUserId(Long taskId, String userId) {

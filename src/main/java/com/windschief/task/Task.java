@@ -1,6 +1,7 @@
 package com.windschief.task;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ public class Task {
     private String name;
     private int executionIntervalDays = 7;
     private Instant lastTimeExecuted;
-    private Instant checkFrom;
+    private LocalDate checkFrom;
     private boolean active;
     private String userId;
     private String playlistId;
@@ -94,11 +95,11 @@ public class Task {
         this.lastTimeExecuted = lastTimeExecuted;
     }
 
-    public Instant getCheckFrom() {
+    public LocalDate getCheckFrom() {
         return checkFrom;
     }
 
-    public void setCheckFrom(Instant checkFrom) {
+    public void setCheckFrom(LocalDate checkFrom) {
         this.checkFrom = checkFrom;
     }
 
