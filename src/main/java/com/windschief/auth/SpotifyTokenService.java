@@ -5,7 +5,10 @@ import java.util.Base64;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.windschief.spotify.SpotifyAccountsApi;
+import com.windschief.spotify.SpotifyAuthError;
 import com.windschief.spotify.model.TokenResponse;
 
 import io.quarkus.security.identity.SecurityIdentity;
@@ -21,6 +24,7 @@ public class SpotifyTokenService implements SpotifyTokenApi {
     private final SpotifyConfig spotifyConfig;
     private final SpotifyAccountsApi spotifyAccountsApi;
     private final SecurityIdentity securityIdentity;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     public SpotifyTokenService(SpotifyTokenRepository tokenRepository, SpotifyConfig spotifyConfig,
@@ -71,13 +75,28 @@ public class SpotifyTokenService implements SpotifyTokenApi {
     }
 
     private TokenResponse refreshToken(SpotifyToken token) throws WebApplicationException {
-        String basicAuth = "Basic " + Base64.getEncoder()
+        final String basicAuth = "Basic " + Base64.getEncoder()
                 .encodeToString((spotifyConfig.clientId() + ":" + spotifyConfig.clientSecret()).getBytes());
 
-        return spotifyAccountsApi.refreshToken(
+        try {
+            return spotifyAccountsApi.refreshToken(
                 basicAuth,
                 "refresh_token",
                 token.getRefreshToken(),
                 spotifyConfig.clientId());
+        } catch (WebApplicationException e) {
+            String errorBody = e.getResponse().readEntity(String.class);
+            try {
+                SpotifyAuthError authError = objectMapper.readValue(errorBody, SpotifyAuthError.class);
+                throw new WebApplicationException(
+                        String.format("Spotify refresh token error: %s - %s",
+                                authError.error(),
+                                authError.error_description()),
+                        e.getResponse().getStatus());
+            } catch (JsonProcessingException parseException) {
+                throw new WebApplicationException("Spotify refresh token error: " + errorBody,
+                        e.getResponse().getStatus());
+            }
+        }
     }
 }
