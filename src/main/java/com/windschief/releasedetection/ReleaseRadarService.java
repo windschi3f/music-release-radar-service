@@ -111,6 +111,7 @@ public class ReleaseRadarService {
         return processingTasks.getOrDefault(taskId, false);
     }
 
+    @Counted(value = "spotify.tracks.fetch")
     @Timed(value = "spotify.tracks.fetch.duration", description = "Time taken to fetch tracks from albums")
     protected List<TrackItem> fetchTracksFromAlbums(String token, List<AlbumItem> newAlbumReleases)
             throws WebApplicationException, IOException, InterruptedException {
@@ -134,6 +135,7 @@ public class ReleaseRadarService {
         return tracks;
     }
 
+    @Counted(value = "spotify.playlist.update")
     @Timed(value = "spotify.playlist.update.duration", description = "Time taken to add tracks to playlist")
     protected void addTracksToPlaylist(String token, Task task, List<TrackItem> newTrackReleases)
             throws WebApplicationException {

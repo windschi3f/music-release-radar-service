@@ -92,6 +92,7 @@ public class ReleaseDetectionService {
         return albums;
     }
 
+    @Counted(value = "spotify.albums.fetch")
     @Timed(value = "spotify.albums.fetch.duration", description = "Time taken to fetch all albums for an artist")
     protected List<AlbumItem> fetchAllArtistAlbums(String token, String artistId)
             throws WebApplicationException, IOException, InterruptedException {
