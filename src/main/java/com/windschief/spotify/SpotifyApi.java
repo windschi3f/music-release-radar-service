@@ -26,6 +26,7 @@ import jakarta.ws.rs.core.MediaType;
 
 @Path("/v1")
 @RegisterRestClient(configKey = "spotify-api")
+@RetrySpotify
 @ApplicationScoped
 public interface SpotifyApi {
         /**
