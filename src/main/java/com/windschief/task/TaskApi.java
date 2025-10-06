@@ -50,7 +50,7 @@ public interface TaskApi {
         @Path("/{id}/execute")
         @Operation(summary = "Execute a task by ID")
         @APIResponses(value = {
-                        @APIResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TaskResponseDto.class))),
+                        @APIResponse(responseCode = "202", description = "Task execution started"),
                         @APIResponse(responseCode = "401", description = "Unauthorized"),
                         @APIResponse(responseCode = "404", description = "Task not found")
         })
