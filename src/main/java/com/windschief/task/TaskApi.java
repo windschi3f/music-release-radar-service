@@ -46,7 +46,7 @@ public interface TaskApi {
         @Authenticated
         Response getTask(@Parameter(description = "ID of the task", required = true) @PathParam("id") Long id);
 
-        @GET
+        @POST
         @Path("/{id}/execute")
         @Operation(summary = "Execute a task by ID")
         @APIResponses(value = {
