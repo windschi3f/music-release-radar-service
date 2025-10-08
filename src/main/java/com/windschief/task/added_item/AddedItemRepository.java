@@ -20,9 +20,17 @@ public class AddedItemRepository implements PanacheRepository<AddedItem> {
         return delete("task.id = ?1 and task.userId = ?2", taskId, userId);
     }
 
+    public long deleteByUserId(String userId) {
+        return delete("task.userId = ?1", userId);
+    }
+
     public Instant getLastAddedAt(Long taskId) {
         AddedItem item = find("task.id = ?1 order by addedAt desc", taskId)
                 .firstResult();
         return item != null ? item.getAddedAt() : null;
+    }
+
+    public List<AddedItem> findByUserId(String userId) {
+        return list("task.userId", userId);
     }
 }

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,7 @@ public class SpotifyTokenServiceTest {
     void givenNoRefreshToken_whenGetValidBearerAccessToken_thenThrowException() {
         // given
         final SpotifyToken token = new SpotifyToken(USER_ID, null, null, null);
-        when(tokenRepository.findByUserId(USER_ID)).thenReturn(token);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(Optional.of(token));
 
         // when / then
         assertThrows(SpotifyTokenException.class, () -> spotifyTokenService.getValidBearerAccessToken(USER_ID));
@@ -68,7 +69,7 @@ public class SpotifyTokenServiceTest {
         // given
         final String newAccessToken = "new-access-token";
         final SpotifyToken token = new SpotifyToken(USER_ID, null, "test-refresh-token", Instant.now().minusSeconds(1));
-        when(tokenRepository.findByUserId(USER_ID)).thenReturn(token);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(Optional.of(token));
 
         TokenResponse tokenResponse = new TokenResponse(newAccessToken, "", 3600, USER_ID, "test-refresh-token");
 
@@ -93,7 +94,7 @@ public class SpotifyTokenServiceTest {
         final String accessToken = "test-access-token";
         final SpotifyToken token = new SpotifyToken(USER_ID, accessToken, "test-refresh-token",
                 Instant.now().plusSeconds(3600));
-        when(tokenRepository.findByUserId(USER_ID)).thenReturn(token);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(Optional.of(token));
 
         // when
         String result = spotifyTokenService.getValidBearerAccessToken(USER_ID);
@@ -121,7 +122,7 @@ public class SpotifyTokenServiceTest {
         // given
         final String newRefreshToken = "test-refresh-token";
         final SpotifyToken token = new SpotifyToken(USER_ID, "test-access-token", "old-refresh-token", Instant.now());
-        when(tokenRepository.findByUserId(USER_ID)).thenReturn(token);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(Optional.of(token));
 
         // when
         Response response = spotifyTokenService.storeRefreshToken(newRefreshToken);

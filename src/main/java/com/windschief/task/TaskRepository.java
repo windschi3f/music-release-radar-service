@@ -14,4 +14,8 @@ public class TaskRepository implements PanacheRepository<Task> {
     public long countTasksForUser(String userId) {
         return count("userId = ?1", userId);
     }
+
+    public long deleteByUserId(String userId) {
+        return delete("userId", userId);
+    }
 }

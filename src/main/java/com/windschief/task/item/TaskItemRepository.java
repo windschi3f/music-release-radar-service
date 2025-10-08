@@ -19,4 +19,8 @@ public class TaskItemRepository implements PanacheRepository<TaskItem> {
     public long deleteByTaskId(Long taskId) {
         return delete("task.id", taskId);
     }
+
+    public long deleteByUserId(String userId) {
+        return delete("task.userId", userId);
+    }
 }

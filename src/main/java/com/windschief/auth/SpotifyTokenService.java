@@ -2,6 +2,7 @@ package com.windschief.auth;
 
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Optional;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
@@ -39,39 +40,39 @@ public class SpotifyTokenService implements SpotifyTokenApi {
     @Transactional
     public Response storeRefreshToken(String refreshToken) {
         final String userId = securityIdentity.getPrincipal().getName();
-        final SpotifyToken storedToken = tokenRepository.findByUserId(userId);
+        final Optional<SpotifyToken> storedToken = tokenRepository.findByUserId(userId);
 
-        if (storedToken == null) {
+        if (storedToken.isEmpty()) {
             final SpotifyToken newToken = new SpotifyToken(userId, null, refreshToken, Instant.now());
             tokenRepository.persist(newToken);
             return Response.status(Response.Status.CREATED).build();
         }
 
-        storedToken.setRefreshToken(refreshToken);
+        storedToken.get().setRefreshToken(refreshToken);
         return Response.ok().build();
     }
 
     @Transactional
     public String getValidBearerAccessToken(String userId) throws WebApplicationException, SpotifyTokenException {
-        SpotifyToken token = tokenRepository.findByUserId(userId);
-        if (token == null || token.getRefreshToken() == null) {
+        Optional<SpotifyToken> token = tokenRepository.findByUserId(userId);
+        if (token.isEmpty() || token.get().getRefreshToken() == null) {
             throw new SpotifyTokenException("No refresh token found for user " + userId);
         }
 
-        if (token.getExpiresAt().isBefore(Instant.now())) {
-            final TokenResponse tokenResponse = refreshToken(token);
+        if (token.get().getExpiresAt().isBefore(Instant.now())) {
+            final TokenResponse tokenResponse = refreshToken(token.get());
             final Instant expiresAt = Instant.now().plusSeconds(tokenResponse.expires_in() - 60);
 
-            token.setAccessToken(tokenResponse.access_token());
-            token.setExpiresAt(expiresAt);
+            token.get().setAccessToken(tokenResponse.access_token());
+            token.get().setExpiresAt(expiresAt);
         }
 
-        return "Bearer " + token.getAccessToken();
+        return "Bearer " + token.get().getAccessToken();
     }
 
     public boolean hasRefreshToken(String userId) {
-        final SpotifyToken token = tokenRepository.findByUserId(userId);
-        return token != null && token.getRefreshToken() != null;
+        final Optional<SpotifyToken> token = tokenRepository.findByUserId(userId);
+        return token.isPresent() && token.get().getRefreshToken() != null;
     }
 
     private TokenResponse refreshToken(SpotifyToken token) throws WebApplicationException {
