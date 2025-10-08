@@ -34,7 +34,7 @@ class TaskItemRepositoryTest {
 
         TaskItem taskItem = new TaskItem();
         taskItem.setItemType(TaskItemType.ARTIST);
-        taskItem.setExternalReferenceId("1");
+        taskItem.setExternalId("1");
         task.addTaskItem(taskItem);
 
         taskRepository.persist(task);
@@ -58,7 +58,7 @@ class TaskItemRepositoryTest {
 
         TaskItem taskItem = new TaskItem();
         taskItem.setItemType(TaskItemType.ARTIST);
-        taskItem.setExternalReferenceId("1");
+        taskItem.setExternalId("1");
         task.addTaskItem(taskItem);
 
         taskRepository.persist(task);
@@ -83,7 +83,7 @@ class TaskItemRepositoryTest {
 
         TaskItem taskItem = new TaskItem();
         taskItem.setItemType(TaskItemType.ARTIST);
-        taskItem.setExternalReferenceId("1");
+        taskItem.setExternalId("1");
         taskItem.setTask(task);
 
         // WHEN

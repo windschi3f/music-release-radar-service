@@ -47,7 +47,7 @@ public class SpotifyTokenServiceTest {
     @Test
     void givenNoToken_whenGetValidBearerAccessToken_thenThrowException() {
         // given
-        when(tokenRepository.findByUserId(USER_ID)).thenReturn(null);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
 
         // when / then
         assertThrows(SpotifyTokenException.class, () -> spotifyTokenService.getValidBearerAccessToken(USER_ID));
@@ -107,7 +107,7 @@ public class SpotifyTokenServiceTest {
     void givenNoToken_whenStoreRefreshToken_thenCreateTokenAndReturnCreated() {
         // given
         final String refreshToken = "test-refresh-token";
-        when(tokenRepository.findByUserId(USER_ID)).thenReturn(null);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
 
         // when
         Response response = spotifyTokenService.storeRefreshToken(refreshToken);

@@ -24,7 +24,7 @@ public class TaskItem {
     @Enumerated(EnumType.STRING)
     private TaskItemType itemType;
 
-    private String externalReferenceId;
+    private String externalId;
 
     public Long getId() {
         return id;
@@ -38,8 +38,8 @@ public class TaskItem {
         return itemType;
     }
 
-    public String getExternalReferenceId() {
-        return externalReferenceId;
+    public String getExternalId() {
+        return externalId;
     }
 
     public void setTask(Task task) {
@@ -50,7 +50,7 @@ public class TaskItem {
         this.itemType = itemType;
     }
 
-    public void setExternalReferenceId(String externalReferenceId) {
-        this.externalReferenceId = externalReferenceId;
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 }

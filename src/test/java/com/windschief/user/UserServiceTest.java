@@ -70,7 +70,7 @@ public class UserServiceTest {
 
         TaskItem item = new TaskItem();
         item.setTask(task);
-        item.setExternalReferenceId("external-id");
+        item.setExternalId("external-id");
         taskItemRepository.persist(item);
 
         AddedItem addedItem = new AddedItem();
@@ -104,7 +104,7 @@ public class UserServiceTest {
 
         TaskItem item = new TaskItem();
         item.setTask(task);
-        item.setExternalReferenceId("external-id");
+        item.setExternalId("external-id");
         taskItemRepository.persist(item);
 
         AddedItem addedItem = new AddedItem();

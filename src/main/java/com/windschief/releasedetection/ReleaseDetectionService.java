@@ -78,7 +78,7 @@ public class ReleaseDetectionService {
     private List<AlbumItem> findNewReleasesFromArtists(Task task, String token)
             throws WebApplicationException, IOException, InterruptedException {
         final List<String> artistIds = task.getTaskItems().stream()
-                .map(TaskItem::getExternalReferenceId)
+                .map(TaskItem::getExternalId)
                 .toList();
 
         final List<AlbumItem> albums = new ArrayList<>();

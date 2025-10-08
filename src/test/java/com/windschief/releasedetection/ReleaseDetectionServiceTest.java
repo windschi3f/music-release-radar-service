@@ -89,7 +89,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
                 TaskItem taskItem = mock(TaskItem.class);
                 when(taskItem.getItemType()).thenReturn(TaskItemType.ARTIST);
-                when(taskItem.getExternalReferenceId()).thenReturn("artistId");
+                when(taskItem.getExternalId()).thenReturn("artistId");
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
@@ -127,7 +127,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
                 TaskItem taskItem = mock(TaskItem.class);
                 when(taskItem.getItemType()).thenReturn(TaskItemType.ARTIST);
-                when(taskItem.getExternalReferenceId()).thenReturn("artistId");
+                when(taskItem.getExternalId()).thenReturn("artistId");
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
@@ -164,7 +164,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
                 TaskItem taskItem = mock(TaskItem.class);
                 when(taskItem.getItemType()).thenReturn(TaskItemType.ARTIST);
-                when(taskItem.getExternalReferenceId()).thenReturn("artistId");
+                when(taskItem.getExternalId()).thenReturn("artistId");
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
@@ -201,7 +201,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
                 TaskItem taskItem = mock(TaskItem.class);
                 when(taskItem.getItemType()).thenReturn(TaskItemType.ARTIST);
-                when(taskItem.getExternalReferenceId()).thenReturn("artistId");
+                when(taskItem.getExternalId()).thenReturn("artistId");
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
@@ -239,7 +239,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
                 TaskItem taskItem = mock(TaskItem.class);
                 when(taskItem.getItemType()).thenReturn(TaskItemType.ARTIST);
-                when(taskItem.getExternalReferenceId()).thenReturn("artistId");
+                when(taskItem.getExternalId()).thenReturn("artistId");
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
@@ -278,7 +278,7 @@ public class ReleaseDetectionServiceTest {
                 when(task.getPlatform()).thenReturn(Platform.SPOTIFY);
                 TaskItem taskItem = mock(TaskItem.class);
                 when(taskItem.getItemType()).thenReturn(TaskItemType.ARTIST);
-                when(taskItem.getExternalReferenceId()).thenReturn("artistId");
+                when(taskItem.getExternalId()).thenReturn("artistId");
                 when(task.getTaskItems()).thenReturn(List.of(taskItem));
                 when(task.getUserId()).thenReturn("userId");
                 when(task.getId()).thenReturn(1L);
