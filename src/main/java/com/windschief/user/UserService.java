@@ -1,9 +1,11 @@
 package com.windschief.user;
 
 import com.windschief.auth.SpotifyTokenRepository;
+import com.windschief.task.TaskMapper;
 import com.windschief.task.TaskRepository;
 import com.windschief.task.added_item.AddedItemRepository;
 import com.windschief.task.item.TaskItemRepository;
+import com.windschief.task.item.TaskItemResponseDto;
 
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,14 +21,16 @@ public class UserService implements UserApi {
     private final TaskRepository taskRepository;
     private final AddedItemRepository addedItemRepository;
     private final TaskItemRepository taskItemRepository;
+    private final TaskMapper taskMapper;
 
     @Inject
-    public UserService(SecurityIdentity securityIdentity, SpotifyTokenRepository spotifyTokenRepository, TaskRepository taskRepository, AddedItemRepository addedItemRepository, TaskItemRepository taskItemRepository) {
+    public UserService(SecurityIdentity securityIdentity, SpotifyTokenRepository spotifyTokenRepository, TaskRepository taskRepository, AddedItemRepository addedItemRepository, TaskItemRepository taskItemRepository, TaskMapper taskMapper) {
         this.securityIdentity = securityIdentity;
         this.spotifyTokenRepository = spotifyTokenRepository;
         this.taskRepository = taskRepository;
         this.addedItemRepository = addedItemRepository;
         this.taskItemRepository = taskItemRepository;
+        this.taskMapper = taskMapper;
     }
 
     @Override
@@ -36,7 +40,15 @@ public class UserService implements UserApi {
         UserDataDto data = new UserDataDto(
             userId,
             spotifyTokenRepository.findByUserId(userId).orElse(null),
-            taskRepository.findByUserId(userId),
+            taskRepository.findByUserId(userId).stream()
+                .map(taskMapper::toDto)
+                .toList(),
+            taskItemRepository.findByUserId(userId).stream()
+                .map(item -> new TaskItemResponseDto(
+                    item.getId(),
+                    item.getItemType(),
+                    item.getExternalId()))
+                .toList(),
             addedItemRepository.findByUserId(userId)
         );
 

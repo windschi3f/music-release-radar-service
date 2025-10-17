@@ -123,7 +123,9 @@ public class UserServiceTest {
         assertNotNull(data.spotifyToken());
         assertEquals("access-token", data.spotifyToken().getAccessToken());
         assertEquals(1, data.tasks().size());
-        assertEquals("Test Task", data.tasks().get(0).getName());
+        assertEquals("Test Task", data.tasks().get(0).name());
+        assertEquals(1, data.taskItems().size());
+        assertEquals("external-id", data.taskItems().get(0).externalId());
         assertEquals(1, data.addedItems().size());
         assertEquals("external-id", data.addedItems().get(0).getExternalId());
     }
