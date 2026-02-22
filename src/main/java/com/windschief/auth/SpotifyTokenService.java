@@ -65,6 +65,9 @@ public class SpotifyTokenService implements SpotifyTokenApi {
 
             token.get().setAccessToken(tokenResponse.access_token());
             token.get().setExpiresAt(expiresAt);
+            if (tokenResponse.refresh_token() != null) {
+                token.get().setRefreshToken(tokenResponse.refresh_token());
+            }
         }
 
         return "Bearer " + token.get().getAccessToken();
