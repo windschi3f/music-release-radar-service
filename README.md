@@ -62,6 +62,8 @@ Validation on 2026-11-06 (recently added songs): all 100 backend tests passed (1
 
 JDK 23 is required. Run the full suite against an isolated test PostgreSQL database with `quarkus.datasource.devservices.enabled=false`, `quarkus.scheduler.enabled=false` and `quarkus.http.test-port=0`; never use the production database. HTTP contract tests use local simulated Spotify/Last.fm services, including pagination, unavailable tracks, matching, missing permissions, optional keys and error redaction.
 
+GitHub Actions provides a disposable PostgreSQL 14 service with a readiness check. The Maven step sets the database connection, disables Dev Services and scheduling, and selects a random HTTP port only for the `%test` profile. All tests remain enabled. The database credentials in the workflow belong only to this temporary CI database. This avoids the outdated Docker API client bundled with the current Quarkus/Testcontainers version; no CI database or scheduler settings are applied to the production profile.
+
 References: [Spotify saved tracks](https://developer.spotify.com/documentation/web-api/reference/get-users-saved-tracks), [Last.fm similar tracks](https://www.last.fm/api/show/track.getSimilar).
 
 ## Running the application in dev mode

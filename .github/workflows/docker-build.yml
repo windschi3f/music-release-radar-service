@@ -8,18 +8,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: radar_ci
+          POSTGRES_USER: radar_ci
+          POSTGRES_PASSWORD: radar_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --restart unless-stopped
+          --health-cmd "pg_isready -U radar_ci -d radar_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v4
         
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v4
         
       - name: Cache Docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@v6
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -27,19 +42,28 @@ jobs:
             ${{ runner.os }}-buildx-
             
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '23'
             
       - name: Build with Maven
-        run: ./mvnw package          
+        # Connect only the test profile to the disposable CI database. This avoids
+        # the Docker API client bundled with Quarkus Dev Services/Testcontainers.
+        run: >-
+          ./mvnw --batch-mode package
+          '-D%test.quarkus.datasource.devservices.enabled=false'
+          '-D%test.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/radar_ci'
+          '-D%test.quarkus.datasource.username=radar_ci'
+          '-D%test.quarkus.datasource.password=radar_ci'
+          '-D%test.quarkus.scheduler.enabled=false'
+          '-D%test.quarkus.http.test-port=0'
 
       - name: Check files
         run: |
@@ -48,7 +72,7 @@ jobs:
             ls -la src/main/docker/          
           
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: src/main/docker/Dockerfile.jvm
