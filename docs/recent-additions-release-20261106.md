@@ -21,3 +21,7 @@ Schema V7; both existing tasks, 88 history entries and both Spotify token rows u
 ## Rollback
 
 Put the `discovery-20261030` tags back (backend and frontend). V7 is additive; the old backend validates it only with `QUARKUS_FLYWAY_IGNORE_MIGRATION_PATTERNS=versioned:future`, and should then run with scheduling disabled if a `RECENT_ADDITIONS` task exists, because the old enum cannot load it. Do not downgrade the schema.
+
+## Follow-up: rolling 30-day release window (2026-11-06)
+
+After a second explicit one-time Portainer API exception, both stacks were switched from `recent-additions-20261106` to `rolling-window-20261106` (backend first) using the same tag-only procedure. No migration; `postgres-db` was not recreated this time. Verified: schema V7, three tasks and both Spotify token rows present, backend zero restarts, user/DNS/read-only Last.fm mount/`unless-stopped`/Watchtower exclusion preserved, public bundle equals local and contains the new hint, API 401 without authentication and CORS preflight allowed. Pre-deployment dump and stack files: `before-rolling-window.dump`, `stack-1-before-rolling.json`, `stack-10-before-rolling.json` in the protected build directory. Rollback: restore the `recent-additions-20261106` tags.
