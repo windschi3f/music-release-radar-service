@@ -36,6 +36,8 @@ public class PersonalDiscoveryService {
     /** Fewer additions inside the window are topped up with the most recently added songs. */
     static final int MIN_RECENT_SEEDS = 10;
     static final int MAX_RECENT_SEEDS = 25;
+    /** Releases from this many days are preferred for up to half of each selection. */
+    static final int RECENT_RELEASE_DAYS = 30;
     private final MusicCatalog catalog;
     private final SimilarSongs similar;
     private final SpotifyTokenService tokens;
@@ -104,7 +106,8 @@ public class PersonalDiscoveryService {
                 .thenComparing(Map.Entry::getKey)).limit(10).forEach(e -> {
                     if (artistIds.size() < 10) artistIds.add(e.getKey());
                 });
-        LocalDate from = task.getCheckFrom() == null ? LocalDate.now().minusDays(30) : task.getCheckFrom();
+        // A rolling window: personal discovery ignores the task's fixed checkFrom date.
+        LocalDate from = LocalDate.now().minusDays(RECENT_RELEASE_DAYS);
         for (String artistId : artistIds) {
             for (DiscoveryTrack track : catalog.artistTracks(token, artistId)) {
                 boolean recent = track.releaseDate() != null && !track.releaseDate().isBefore(from);

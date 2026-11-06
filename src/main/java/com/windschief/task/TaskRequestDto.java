@@ -63,6 +63,9 @@ public record TaskRequestDto(
         if (tasteSource == null && favoritePlaylistId != null) {
             tasteSource = TasteSource.PLAYLIST;
         }
+        if (tasteSource != null) {
+            checkFrom = null; // Personal discovery prefers releases from a rolling 30-day window instead.
+        }
         if (tasteSource != null && (playlistId == null || playlistId.isBlank())) {
             throw new BadRequestException("Choose a discovery playlist");
         }

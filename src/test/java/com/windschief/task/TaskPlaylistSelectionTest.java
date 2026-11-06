@@ -154,4 +154,14 @@ class TaskPlaylistSelectionTest {
                 "destination", null, TasteSource.LIKED_SONGS, 20, false, List.of("mix-a"), 7));
         assertEquals(7, recent(List.of("mix-a"), null, null).recentDays());
     }
+
+    @Test
+    void discoveryTasksDoNotStoreAFixedCheckFromDate() {
+        LocalDate date = LocalDate.of(2026, 10, 1);
+        assertNull(new TaskRequestDto("Liked", Platform.SPOTIFY, 7, date, true, "destination", null,
+                TasteSource.LIKED_SONGS).checkFrom());
+        assertNull(recent(List.of("mix-a"), null, 7).checkFrom());
+        assertEquals(date, new TaskRequestDto("Releases", Platform.SPOTIFY, 7, date, true, "destination", null,
+                null).checkFrom());
+    }
 }

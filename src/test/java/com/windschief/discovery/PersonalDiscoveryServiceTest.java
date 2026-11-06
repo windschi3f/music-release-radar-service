@@ -285,4 +285,23 @@ class PersonalDiscoveryServiceTest {
         assertThrows(DiscoveryException.class, () -> service.execute(42L));
         verify(catalog, never()).writePlaylist(any(), any(), anyList(), anyBoolean());
     }
+
+    @Test
+    void newReleasesUseARollingThirtyDayWindowInsteadOfTheStoredDate() throws Exception {
+        task.setCheckFrom(LocalDate.of(2000, 1, 1));
+        DiscoveryTrack fresh = new DiscoveryTrack("fresh", "Fresh", List.of(new DiscoveryTrack.Artist("artist-a", "artist-a")),
+                "album-new", LocalDate.now().minusDays(5), "FRESH");
+        DiscoveryTrack older = new DiscoveryTrack("older", "Older", List.of(new DiscoveryTrack.Artist("artist-a", "artist-a")),
+                "album-old", LocalDate.now().minusDays(45), "OLDER");
+        when(catalog.artistTracks("Bearer fixture", "artist-a")).thenReturn(List.of(older, fresh));
+
+        service.execute(42L);
+
+        ArgumentCaptor<AddedItem> items = ArgumentCaptor.forClass(AddedItem.class);
+        verify(history, times(2)).persist(items.capture());
+        var reasons = items.getAllValues().stream().collect(java.util.stream.Collectors.toMap(
+                AddedItem::getExternalId, AddedItem::getReason));
+        assertTrue(reasons.get("fresh").startsWith("New release from"), reasons.toString());
+        assertTrue(reasons.get("older").startsWith("More from"), reasons.toString());
+    }
 }
