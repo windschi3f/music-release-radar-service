@@ -98,7 +98,7 @@ class TaskServiceTest {
     @Test
     void givenValidTaskRequest_whenCreateTask_thenTaskIsCreated() {
         // GIVEN
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123", null, null);
 
         doAnswer(invocation -> {
             Task task = invocation.getArgument(0);
@@ -119,7 +119,7 @@ class TaskServiceTest {
     @Test
     void givenMissingRefreshToken_whenCreateTask_thenReturnPreconditionFailed() {
         // GIVEN
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123", null, null);
         when(spotifyTokenService.hasRefreshToken(USER_ID)).thenReturn(false);
 
         // WHEN
@@ -138,7 +138,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(existingTask);
         when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(false);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123", null, null);
 
         // WHEN
         Response response = taskService.updateTask(taskId, taskRequestDto);
@@ -159,7 +159,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(task);
         doThrow(new NotFoundException()).when(taskAccess).checkAccess(task);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123", null, null);
 
         // WHEN / THEN
         assertThrows(NotFoundException.class, () -> taskService.updateTask(taskId, taskRequestDto));
@@ -173,7 +173,7 @@ class TaskServiceTest {
         when(taskRepository.findById(taskId)).thenReturn(task);
         when(releaseRadarService.isTaskProcessing(taskId)).thenReturn(true);
 
-        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123");
+        TaskRequestDto taskRequestDto = new TaskRequestDto("test", Platform.SPOTIFY, 7, LocalDate.now(), true, "123", null, null);
 
         // WHEN / THEN
         assertThrows(IllegalStateException.class, () -> taskService.updateTask(taskId, taskRequestDto));

@@ -132,4 +132,28 @@ public class SpotifyTokenServiceTest {
         verify(tokenRepository, times(0)).persist(any(SpotifyToken.class));
         assertEquals(newRefreshToken, token.getRefreshToken());
     }
+
+    @Test
+    void reauthorizationUsesTheNewGrantEvenWhenTheOldAccessTokenHasNotExpired() throws Exception {
+        SpotifyToken token = new SpotifyToken(USER_ID, "old-access", "old-refresh", Instant.now().plusSeconds(3600));
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(Optional.of(token));
+        when(spotifyAccountsApi.refreshToken(any(), any(), any(), any()))
+                .thenReturn(new TokenResponse("library-access", "Bearer", 3600, "user-library-read", null));
+
+        spotifyTokenService.storeRefreshToken("new-library-grant");
+
+        assertEquals("Bearer library-access", spotifyTokenService.getValidBearerAccessToken(USER_ID));
+        verify(spotifyAccountsApi).refreshToken(any(), org.mockito.ArgumentMatchers.eq("refresh_token"),
+                org.mockito.ArgumentMatchers.eq("new-library-grant"), org.mockito.ArgumentMatchers.eq("test-client-id"));
+    }
+
+    @Test
+    void incompleteCachedTokensAreRefreshed() throws Exception {
+        SpotifyToken token = new SpotifyToken(USER_ID, null, "refresh", null);
+        when(tokenRepository.findByUserId(USER_ID)).thenReturn(Optional.of(token));
+        when(spotifyAccountsApi.refreshToken(any(), any(), any(), any()))
+                .thenReturn(new TokenResponse("recovered-access", "Bearer", 3600, "", null));
+
+        assertEquals("Bearer recovered-access", spotifyTokenService.getValidBearerAccessToken(USER_ID));
+    }
 }

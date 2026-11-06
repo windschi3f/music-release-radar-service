@@ -10,6 +10,9 @@ import java.util.concurrent.ConcurrentMap;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import com.windschief.auth.SpotifyTokenService;
+import com.windschief.auth.SpotifyTokenException;
+import com.windschief.discovery.DiscoveryException;
+import com.windschief.discovery.PersonalDiscoveryService;
 import com.windschief.client.HttpClientService;
 import com.windschief.spotify.SpotifyApi;
 import com.windschief.spotify.model.AlbumItem;
@@ -41,6 +44,7 @@ public class ReleaseRadarService {
     private final SpotifyApi spotifyApi;
     private final AddedItemRepository addedItemRepository;
     private final HttpClientService httpClientService;
+    private final PersonalDiscoveryService personalDiscovery;
 
     private final ConcurrentMap<Long, Boolean> processingTasks = new ConcurrentHashMap<>();
 
@@ -51,13 +55,15 @@ public class ReleaseRadarService {
             SpotifyTokenService spotifyTokenService,
             @RestClient SpotifyApi spotifyApi,
             AddedItemRepository addedItemRepository,
-            HttpClientService httpClientService) {
+            HttpClientService httpClientService,
+            PersonalDiscoveryService personalDiscovery) {
         this.releaseDetectionService = releaseDetectionService;
         this.taskRepository = taskRepository;
         this.spotifyTokenService = spotifyTokenService;
         this.spotifyApi = spotifyApi;
         this.addedItemRepository = addedItemRepository;
         this.httpClientService = httpClientService;
+        this.personalDiscovery = personalDiscovery;
     }
 
     @Counted(value = "release.radar.jobs", description = "Number of release radar jobs executed")
@@ -82,9 +88,27 @@ public class ReleaseRadarService {
     @Timed(value = "release.radar.task.duration", description = "Time taken to process individual tasks")
     public void execute(Task task) {
         final long taskId = task.getId();
-        processingTasks.put(taskId, true);
+        if (processingTasks.putIfAbsent(taskId, true) != null) return;
+        executeReserved(task);
+    }
 
+    public void submit(Task task) {
+        if (processingTasks.putIfAbsent(task.getId(), true) != null) return;
         try {
+            java.util.concurrent.CompletableFuture.runAsync(() -> executeReserved(task));
+        } catch (RuntimeException e) {
+            processingTasks.remove(task.getId());
+            throw e;
+        }
+    }
+
+    private void executeReserved(Task task) {
+        final long taskId = task.getId();
+        try {
+            if (task.getTasteSource() != null) {
+                updateOutcome(taskId, personalDiscovery.execute(taskId), false);
+                return;
+            }
             final List<AlbumItem> newAlbumReleases = releaseDetectionService.detectNewAlbumReleases(taskId);
 
             int addedTracks = 0;
@@ -98,12 +122,19 @@ public class ReleaseRadarService {
 
             Log.info(String.format("Task executed successfully [taskId=%s, userId=%s, playlistId=%s, addedTracks=%d]",
                     task.getId(), task.getUserId(), task.getPlaylistId(), addedTracks));
+            updateOutcome(taskId, "Added " + addedTracks + " release tracks.", false);
         } catch (Exception e) {
-            Log.error(String.format("Failed to execute task [taskId=%s, userId=%s, playlistId=%s]",
-                    task.getId(), task.getUserId(), task.getPlaylistId()), e);
+            String message = e instanceof DiscoveryException ? e.getMessage()
+                    : e instanceof SpotifyTokenException ? "Reconnect Spotify before running this task."
+                    : "This run could not be completed. Please try again.";
+            Log.errorf("Task failed [taskId=%s]: %s", taskId, message);
+            try {
+                updateOutcome(taskId, message, true);
+            } catch (Exception persistenceFailure) {
+                Log.errorf("Could not save the failed task outcome [taskId=%s]", taskId);
+            }
         } finally {
-            updateTasksLastExecution(task.getId());
-            processingTasks.put(taskId, false);
+            processingTasks.remove(taskId);
         }
     }
 
@@ -175,9 +206,11 @@ public class ReleaseRadarService {
     }
 
     @Transactional
-    protected void updateTasksLastExecution(long taskId) {
+    protected void updateOutcome(long taskId, String message, boolean failed) {
         Task task = taskRepository.findById(taskId);
-        task.setLastTimeExecuted(Instant.now());
+        task.setLastRunMessage(message.substring(0, Math.min(message.length(), 1000)));
+        task.setLastRunFailed(failed);
+        if (!failed) task.setLastTimeExecuted(Instant.now());
         taskRepository.persist(task);
     }
 }

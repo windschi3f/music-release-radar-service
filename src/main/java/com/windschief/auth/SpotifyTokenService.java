@@ -49,6 +49,9 @@ public class SpotifyTokenService implements SpotifyTokenApi {
         }
 
         storedToken.get().setRefreshToken(refreshToken);
+        // Reauthorization may grant new scopes; never reuse the previous server-side access token.
+        storedToken.get().setAccessToken(null);
+        storedToken.get().setExpiresAt(Instant.EPOCH);
         return Response.ok().build();
     }
 
@@ -59,7 +62,8 @@ public class SpotifyTokenService implements SpotifyTokenApi {
             throw new SpotifyTokenException("No refresh token found for user " + userId);
         }
 
-        if (token.get().getExpiresAt().isBefore(Instant.now())) {
+        if (token.get().getAccessToken() == null || token.get().getExpiresAt() == null
+                || !token.get().getExpiresAt().isAfter(Instant.now())) {
             final TokenResponse tokenResponse = refreshToken(token.get());
             final Instant expiresAt = Instant.now().plusSeconds(tokenResponse.expires_in() - 60);
 

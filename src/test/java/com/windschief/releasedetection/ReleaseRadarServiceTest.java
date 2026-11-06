@@ -39,7 +39,8 @@ public class ReleaseRadarServiceTest {
         private final AddedItemRepository addedItemRepository = mock(AddedItemRepository.class);
         private final HttpClientService httpClientService = mock(HttpClientService.class);
         private final ReleaseRadarService releaseRadarService = new ReleaseRadarService(releaseDetectionService,
-                        taskRepository, spotifyTokenService, spotifyApi, addedItemRepository, httpClientService);
+                        taskRepository, spotifyTokenService, spotifyApi, addedItemRepository, httpClientService,
+                        mock(com.windschief.discovery.PersonalDiscoveryService.class));
 
         @SuppressWarnings("unchecked")
         private final PanacheQuery<Task> panacheTaskQuery = mock(PanacheQuery.class);

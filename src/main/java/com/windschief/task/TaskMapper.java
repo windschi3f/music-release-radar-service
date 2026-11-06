@@ -1,5 +1,7 @@
 package com.windschief.task;
 
+import java.util.List;
+
 import com.windschief.releasedetection.ReleaseRadarService;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -24,6 +26,14 @@ public class TaskMapper {
             task.getCheckFrom(),
             task.isActive(),
             task.getPlaylistId(),
-            releaseRadarService.isTaskProcessing(task.getId()));
+            releaseRadarService.isTaskProcessing(task.getId()),
+            task.getFavoritePlaylistId(),
+            task.getTasteSource(),
+            task.getDiscoveryLimit(),
+            task.isReplacePlaylist(),
+            task.getLastRunMessage(),
+            task.isLastRunFailed(),
+            List.copyOf(task.getSourcePlaylistIds()),
+            task.getRecentDays());
     }
 }

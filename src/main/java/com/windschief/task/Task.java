@@ -9,12 +9,17 @@ import java.util.List;
 import com.windschief.task.item.TaskItem;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
 @Entity
@@ -35,6 +40,19 @@ public class Task {
     private boolean active;
     private String userId;
     private String playlistId;
+    private String favoritePlaylistId;
+    @Enumerated(EnumType.STRING)
+    private TasteSource tasteSource;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "task_source_playlist", joinColumns = @JoinColumn(name = "task_id"))
+    @Column(name = "playlist_id")
+    private List<String> sourcePlaylistIds = new ArrayList<>();
+    private int recentDays = 7;
+    private int discoveryLimit = 20;
+    private boolean replacePlaylist;
+    @jakarta.persistence.Column(length = 1000)
+    private String lastRunMessage;
+    private boolean lastRunFailed;
 
     public boolean isDue() {
         return lastTimeExecuted == null ||
@@ -117,6 +135,38 @@ public class Task {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public List<String> getSourcePlaylistIds() { return sourcePlaylistIds; }
+    public void setSourcePlaylistIds(List<String> ids) {
+        sourcePlaylistIds.clear();
+        if (ids != null) sourcePlaylistIds.addAll(ids);
+    }
+    public int getRecentDays() { return recentDays; }
+    public void setRecentDays(int value) { recentDays = value; }
+    public int getDiscoveryLimit() { return discoveryLimit; }
+    public void setDiscoveryLimit(int value) { discoveryLimit = value; }
+    public boolean isReplacePlaylist() { return replacePlaylist; }
+    public void setReplacePlaylist(boolean value) { replacePlaylist = value; }
+    public String getLastRunMessage() { return lastRunMessage; }
+    public void setLastRunMessage(String value) { lastRunMessage = value; }
+    public boolean isLastRunFailed() { return lastRunFailed; }
+    public void setLastRunFailed(boolean value) { lastRunFailed = value; }
+
+    public TasteSource getTasteSource() {
+        return tasteSource;
+    }
+
+    public void setTasteSource(TasteSource tasteSource) {
+        this.tasteSource = tasteSource;
+    }
+
+    public String getFavoritePlaylistId() {
+        return favoritePlaylistId;
+    }
+
+    public void setFavoritePlaylistId(String favoritePlaylistId) {
+        this.favoritePlaylistId = favoritePlaylistId;
     }
 
     public String getPlaylistId() {

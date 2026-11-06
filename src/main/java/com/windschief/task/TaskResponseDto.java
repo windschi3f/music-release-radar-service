@@ -2,6 +2,7 @@ package com.windschief.task;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 public record TaskResponseDto(
         Long id,
@@ -12,5 +13,13 @@ public record TaskResponseDto(
         LocalDate checkFrom,
         boolean active,
         String playlistId,
-        boolean processing) {
+        boolean processing,
+        String favoritePlaylistId,
+        TasteSource tasteSource,
+        int discoveryLimit,
+        boolean replacePlaylist,
+        String lastRunMessage,
+        boolean lastRunFailed,
+        List<String> sourcePlaylistIds,
+        int recentDays) {
 }

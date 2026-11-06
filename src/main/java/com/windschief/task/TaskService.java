@@ -1,7 +1,6 @@
 package com.windschief.task;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import com.windschief.auth.SpotifyTokenService;
 import com.windschief.releasedetection.ReleaseRadarService;
@@ -54,7 +53,7 @@ public class TaskService implements TaskApi {
 
         taskAccess.checkAccess(task);
 
-        CompletableFuture.runAsync(() -> releaseRadarService.execute(task));
+        releaseRadarService.submit(task);
 
         return Response.accepted().build();
     }

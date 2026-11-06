@@ -42,18 +42,33 @@ class TaskRepositoryTest {
         // GIVEN
         Task task = new Task();
         task.setUserId("user");
+        task.setPlaylistId("discovery");
+        task.setFavoritePlaylistId("favorites");
+        task.setTasteSource(TasteSource.PLAYLIST);
+        task.setDiscoveryLimit(12);
+        task.setReplacePlaylist(true);
+        task.setLastRunMessage("Added 12 discoveries.");
+        task.setLastRunFailed(false);
         task.setActive(true);
         task.setPlatform(Platform.SPOTIFY);
 
         taskRepository.persist(task);
 
         // WHEN
+        taskRepository.getEntityManager().flush();
+        taskRepository.getEntityManager().clear();
         Optional<Task> foundTask = taskRepository.findByIdOptional(task.getId());
 
         // THEN
         assertNotNull(task.getId(), "Task ID should not be null after persisting");
         assertTrue(foundTask.isPresent());
         assertEquals("user", foundTask.get().getUserId());
+        assertEquals("favorites", foundTask.get().getFavoritePlaylistId());
+        assertEquals(TasteSource.PLAYLIST, foundTask.get().getTasteSource());
+        assertEquals("discovery", foundTask.get().getPlaylistId());
+        assertEquals(12, foundTask.get().getDiscoveryLimit());
+        assertTrue(foundTask.get().isReplacePlaylist());
+        assertEquals("Added 12 discoveries.", foundTask.get().getLastRunMessage());
     }
 
     @Test

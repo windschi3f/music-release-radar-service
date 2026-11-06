@@ -26,6 +26,19 @@ public class AddedItem {
     private String externalId;
     private Instant addedAt;
     private AddedItemType itemType;
+    private String recordingKey;
+    private String recordingIsrc;
+    @jakarta.persistence.Column(length = 1000)
+    private String reason;
+
+    @JsonIgnore
+    public String getRecordingKey() { return recordingKey; }
+    public void setRecordingKey(String value) { recordingKey = value; }
+    @JsonIgnore
+    public String getRecordingIsrc() { return recordingIsrc; }
+    public void setRecordingIsrc(String value) { recordingIsrc = value; }
+    public String getReason() { return reason; }
+    public void setReason(String value) { reason = value; }
 
     // Default constructor
     public AddedItem() {

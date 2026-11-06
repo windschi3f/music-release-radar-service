@@ -52,15 +52,23 @@ class AddedItemRepositoryTest {
         addedItem.setTask(task);
         addedItem.setExternalId("123");
         addedItem.setItemType(AddedItemType.TRACK);
+        addedItem.setRecordingKey("recording-fingerprint");
+        addedItem.setRecordingIsrc("TESTISRC");
+        addedItem.setReason("Similar to a favorite");
         addedItem.setAddedAt(Instant.now());
         addedItemRepository.persist(addedItem);
 
         // WHEN
+        taskRepository.getEntityManager().flush();
+        taskRepository.getEntityManager().clear();
         List<AddedItem> foundItems = addedItemRepository.findByTaskId(task.getId());
 
         // THEN
         assertEquals(1, foundItems.size());
         assertEquals("123", foundItems.get(0).getExternalId());
+        assertEquals("recording-fingerprint", foundItems.get(0).getRecordingKey());
+        assertEquals("TESTISRC", foundItems.get(0).getRecordingIsrc());
+        assertEquals("Similar to a favorite", foundItems.get(0).getReason());
     }
 
     @Test
